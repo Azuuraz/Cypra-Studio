@@ -15,7 +15,7 @@ Cypra Matrix Studio is a local-first Windows AI workspace built around project-l
 | Area | Implementation |
 | --- | --- |
 | Local inference | Ollama over loopback |
-| Matrix specialists | 700 agents across 77 groups |
+| Matrix specialists | 700 agents across groups |
 | Reasoning modes | `OFF`, `AUTO`, `STANDARD`, `DEEP` |
 | RAG retrieval | CPU-based BM25 |
 | Persistent knowledge | `MatrixFiles/RAG/` |
