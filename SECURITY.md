@@ -10,6 +10,8 @@ The Studio server binds to loopback (`127.0.0.1`). The HTTP layer rejects non-lo
 
 Do not expose the Studio port through router forwarding, public tunnels, reverse proxies, or firewall exceptions unless you separately add appropriate authentication, transport security, and access controls.
 
+Optional Edge TTS is outbound-only. It does not require Matrix Studio to expose a second TTS listener or inbound speech API.
+
 ## Ollama and model traffic
 
 Local inference is intended to use the project-local Ollama runtime/model store. Model installation/update actions can create outbound network traffic when the user explicitly starts a pull.
@@ -18,11 +20,89 @@ Treat model files as executable-adjacent supply-chain inputs: obtain them from s
 
 ## Voice / TTS privacy
 
-Local Piper TTS runs locally when its assets are installed.
+Matrix Studio supports two primary speech paths with different privacy boundaries.
 
-Edge TTS is optional and online. When enabled, text submitted for Edge synthesis leaves the local machine and is sent to the external TTS provider. Keep online TTS disabled when content must remain entirely local.
+### Piper Local
 
-Provider changes and `STOP VOICE` should terminate active playback/synthesis so text is not unintentionally carried into a different provider session.
+Piper is the local/offline speech provider. When its project-local assets are installed, speech inference stays on the host and does not intentionally send spoken text to an external service.
+
+Use Piper for credentials, private configuration, security logs, sensitive file contents, or any material that should remain entirely local.
+
+### Edge Online
+
+Edge TTS is optional, online, and is not treated as equivalent to local speech. Edge synthesis is permitted only when all three controls are enabled:
+
+1. **Voice Output** is enabled.
+2. **Provider** is set to **Edge Online**.
+3. **Allow Online TTS** is enabled.
+
+Fresh/default settings keep Voice Output disabled, Piper selected, and online TTS permission disabled.
+
+Matrix Studio calls the `edge-tts` Python package directly. It does not require a second local TTS web server or expose an additional inbound TTS API. When Edge is used, the final sanitized speech text leaves the host and is sent to Microsoft's speech service.
+
+### Edge sanitization process
+
+Edge receives a narrow plain-text speech payload rather than a raw Matrix response object, agent object, request context, environment dictionary, tool-call structure, or other application state.
+
+Before an Edge request is allowed to reach `edge_tts.Communicate(...)`, the text passes through the following outbound pipeline:
+
+```text
+visible Matrix response
+        |
+        v
+online secret redaction
+        |
+        v
+general speech sanitization
+        |
+        v
+final online secret redaction
+        |
+        v
+EdgeEngine.synthesize(text: str, ...)
+        |
+        v
+edge_tts.Communicate(...)
+```
+
+The online-only redaction layer is deterministic and is designed to remove or redact common credential-bearing material, including:
+
+- API-key assignments and common API-key prefixes,
+- `Bearer` and `Authorization` credentials,
+- password, token, access-token, refresh-token, secret, and client-secret assignments,
+- private-key blocks,
+- credential-style JSON fields,
+- URLs containing token/key/authentication query parameters,
+- internal-looking labels such as `SYSTEM_PROMPT`, `DEVELOPER_PROMPT`, `BRAIN_CONTEXT`, `TOOL_OUTPUT`, `TOOL_CALL`, `AGENT_CONTEXT`, `INTERNAL_CONTEXT`, and `HIDDEN_CONTEXT` when they carry values.
+
+The normal speech sanitizer also removes or suppresses material that should not be spoken as ordinary prose, such as code blocks, URLs, structured dumps, internal metadata, and private path material according to the active voice settings.
+
+The online sanitizer is separate from Piper. Local Piper speech can therefore remain available for content the user intentionally wants spoken locally without sending that content to an external speech provider.
+
+### Fail-closed behavior
+
+Edge sanitization is fail-closed.
+
+If sanitization raises an exception, Matrix Studio must not send the original unsanitized text to Edge. The required behavior is:
+
+1. Block the Edge request.
+2. Record only a concise sanitizer failure message.
+3. Fall back to Piper when the configured fallback permits it.
+4. Otherwise skip speech.
+
+If sanitization produces no safe text, the Edge request is also blocked.
+
+Production TTS logs should contain only operational metadata such as provider, voice, character count, status, timing, or error class. They should not intentionally record full spoken text, detected secret values, Authorization headers, API keys, private keys, or sanitizer input/output.
+
+### Sanitizer limitations
+
+The Edge sanitizer is a defense-in-depth control, not a semantic data-classification system. Deterministic pattern matching cannot identify every form of sensitive prose or every custom secret format.
+
+Ordinary private information can still be sensitive even when it does not resemble a credential. If that text is intentionally spoken through Edge, the sanitized speech payload may still be transmitted to the remote service.
+
+For sensitive sessions, use **Piper Local** or disable voice output.
+
+Provider changes and `STOP VOICE` terminate active playback/synthesis so stale speech is not intentionally carried into another provider session.
 
 ## File review
 
