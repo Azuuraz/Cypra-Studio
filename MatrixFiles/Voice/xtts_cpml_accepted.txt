@@ -1,0 +1,1 @@
+User explicitly accepted the non-commercial Coqui Public Model License terms for local XTTS-v2 use.

@@ -1,0 +1,26 @@
+# Runtime / local state
+.venv/
+__pycache__/
+*.py[cod]
+*.pyc
+*.tmp
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.DS_Store
+Thumbs.db
+
+# Studio data, logs, sessions, vaults
+data/
+
+# Local Ollama store and generated audio (large binaries)
+OllamaModels/
+# Legacy location is ignored only to prevent accidentally staging old model weights.
+MatrixFiles/OllamaModels/
+MatrixFiles/Voice/Piper/
+
+# One-off screenshots
+BUG.png

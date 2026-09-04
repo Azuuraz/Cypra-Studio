@@ -1,0 +1,13 @@
+﻿{
+    "generated_at":  "2026-08-15T21:36:22.1749894-07:00",
+    "target_model":  "huihui_ai/gemma-4-abliterated:e4b",
+    "install_mode":  "all",
+    "modfile_folder":  "Modfiles",
+    "local_host":  "127.0.0.1:11435",
+    "model_store":  "OllamaModels",
+    "generated":  700,
+    "registered_local":  700,
+    "failed":  [
+
+               ]
+}

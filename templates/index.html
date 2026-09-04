@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>CypraMatrixStudio</title>
+<link href="/static/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/static/css/style.css?v=persistent-think-v1-20260904" rel="stylesheet"/>
+</head>
+<body class="theme-ember ui-mode-classic studio-primary-view-chat chat-only-mode">
+<div aria-live="polite" class="boot-splash" id="boot-splash">
+<div aria-hidden="true" class="boot-scan"></div>
+<div aria-hidden="true" class="boot-vignette"></div>
+<div class="boot-frame">
+<div class="boot-brand">CYPRA MATRIX STUDIO</div>
+<pre aria-label="Cypra boot art" class="boot-art" id="boot-art"></pre>
+<div class="boot-stage" id="boot-stage">Initializing Studio…</div>
+<div class="boot-substage" id="boot-substage">Preparing project-local runtime</div>
+<div class="boot-progress"><div id="boot-progress-fill"></div></div>
+<button class="boot-skip" id="boot-skip" type="button">SKIP</button>
+</div>
+</div>
+<div id="app">
+<!-- Top bar -->
+<header class="topbar">
+<div class="brand" title="Cypra Matrix Studio — local agent chat workspace.">
+<div aria-hidden="true" class="brand-mark"></div>
+<div class="brand-text">
+<div class="brand-title">CYPRA MATRIX STUDIO</div>
+<div class="brand-sub" id="brand-sub">LOCAL AI CHAT · PROJECT-LOCAL OLLAMA</div>
+</div>
+</div>
+<div class="top-stats">
+<span class="plugin-status-host" id="plugin-status-host" title="Active plugins"></span>
+<span class="pill pill-warn" id="auth-pill" title="Local project Ollama status">CHECKING…</span>
+<span class="stat-chip" id="build-pill" title="Studio build">v1.0.0 · CHAT + REVIEW</span>
+</div>
+<div class="top-actions">
+
+
+
+<div aria-label="Primary Studio view" class="studio-primary-view-tabs" role="tablist">
+<button aria-controls="panel-chat" aria-selected="true" class="studio-primary-view-tab active" id="studio-view-chat" role="tab" title="Show the full-height Matrix Chat workspace" type="button">CHAT</button>
+<button aria-controls="panel-rag" aria-selected="false" class="studio-primary-view-tab" id="studio-view-rag" role="tab" title="Manage persistent local RAG knowledge" type="button">RAG</button>
+<button aria-controls="modal-settings" aria-selected="false" class="studio-primary-view-tab" id="btn-studio-settings" role="tab" title="Open the full-height Studio Settings workspace" type="button">SETTINGS</button>
+
+</div>
+</div>
+</header>
+<div aria-hidden="true" class="studio-runtime-banner" hidden="" id="studio-runtime-banner"></div>
+<main class="layout">
+<!-- Side panel -->
+<aside aria-label="Chat and local agent workspace" class="side-pane" id="side-pane">
+
+<!-- Chat -->
+<div class="tab-panel active" id="panel-chat" role="tabpanel">
+<div class="chat-toolbar">
+<label class="check matrix-quick" title="Inject the selected CypraMatrix SYSTEM directive from local MatrixFiles into chat.">
+<input checked="" id="matrix-enabled-quick" type="checkbox"/> Matrix
+            </label>
+<label class="think-quick-control" title="Persistent reasoning mode. Changes save immediately, stay active for future turns, and mirror Settings.">
+<span>Think</span>
+<select aria-label="Persistent Think mode" id="think-mode-quick">
+<option value="auto">AUTO</option>
+<option value="off">OFF</option>
+<option value="standard">STD</option>
+<option value="deep">DEEP</option>
+</select>
+            </label>
+<label class="check" title="Natural conversational replies. Keeps the selected agent, but drops STATUS / EXECUTION BLOCK report templates. Does not change context size or reply length.">
+<input id="plain-chat-quick" type="checkbox"/> Plain
+            </label>
+<label class="check" title="Let the selected agent read and write files in its private workplace folder (MatrixFiles/Workplaces/&lt;agent&gt;/).">
+<input id="files-mode-quick" type="checkbox"/> Files
+            </label>
+<label class="check" title="Retrieve relevant excerpts from the project-local MatrixFiles/RAG knowledge store for this chat turn.">
+<input checked="" id="rag-enabled-quick" type="checkbox"/> RAG
+            </label>
+<label class="check" title="Voice conversation with the current agent. Mic listens, the agent replies, then speaks. Uses ... for pauses and CAPS / ! for pitch. Does not change the base chat model.">
+<input id="talk-mode-quick" type="checkbox"/> Talk
+            </label>
+<button class="btn sm ghost" id="btn-tts-test" title="Start or stop a hands-free voice conversation with the current agent" type="button">Start talk</button>
+<select class="matrix-agent-quick" id="matrix-agent-quick" title="Pinned Matrix agent — Save to lock. Auto-route will not overwrite this."></select>
+<button class="btn sm primary" id="btn-save-agent" title="Save this agent and turn off auto-route so chat stays on it" type="button">Save agent</button>
+<button class="btn sm ghost" id="btn-resume-chat" title="Open the isolated local chat-session manager" type="button">Chat sessions</button>
+<button class="btn sm ghost" id="btn-clear-chat" title="Clear this conversation and start a new isolated chat" type="button">Clear chat</button>
+<button class="btn sm ghost" id="btn-chat-bg" title="Set a picture behind the chat log. Drop an image on the log, or pick a file." type="button">BG</button>
+</div>
+<button class="btn sm ghost think-show-btn" hidden="" id="think-tty-show" title="Show the Think stream" type="button">SHOW THINK</button>
+<section class="think-tty" hidden="" id="think-tty">
+<header class="think-tty-bar">
+<span class="think-tty-dot"></span>
+<span id="think-tty-title">BASE THINK</span>
+<span class="think-tty-agent" id="think-tty-agent"></span>
+<button class="think-tty-clear" id="think-tty-hide" title="Hide this think stream" type="button">hide</button>
+</header>
+<pre class="think-tty-body" id="think-tty-body"></pre>
+</section>
+<section class="workplace-panel" hidden="" id="workplace-panel">
+<header class="workplace-bar">
+<span class="think-tty-dot"></span>
+<span>WORKPLACE</span>
+<span class="think-tty-agent" id="workplace-slug"></span>
+<button class="think-tty-clear" id="workplace-refresh" type="button">refresh</button>
+<button class="think-tty-clear" id="workplace-open" type="button">open folder</button>
+</header>
+<pre class="workplace-files" id="workplace-files" title="Files in this agent's workplace"></pre>
+<pre class="workplace-log" id="workplace-log" title="Read/write log"></pre>
+</section>
+<div class="chat-log" id="chat-log">
+<div class="chat-empty" id="chat-empty">
+<strong>Ready.</strong>
+              Type a message · <kbd>Enter</kbd> sends · <kbd>Esc</kbd> stops · <b>Plain</b> for conversation · <b>Review → Next send</b> attaches a file for one turn only.
+            </div>
+</div>
+<div class="studio-compose-grid studio-compose-grid--single">
+<div class="chat-compose studio-chat-composer">
+<button class="btn icon" id="btn-mic" title="Hold to record speech. Uses local Windows speech recognition first; no provider API key is required. Transcript is inserted into the chat box." type="button">🎤</button>
+<button aria-label="Review a local file" class="btn icon file-review-launch" id="btn-review-file" title="Review a local file with the active model. Opens the file-review dialog." type="button"><span aria-hidden="true" class="file-review-btn-icon">📄</span><span class="file-review-btn-label">Review</span></button>
+<div class="studio-composer-field">
+<textarea id="chat-input" placeholder="Current chat only… type a message." rows="2" title="Type a message. Enter to send (Shift+Enter for newline). This chat session is the only history supplied to the agent."></textarea>
+<span class="studio-input-count" id="studio-input-count">0 chars</span>
+</div>
+<button class="btn ghost icon" hidden="" id="btn-stop-chat" title="Stop the current generation (Esc). Keeps the partial reply." type="button">STOP</button>
+<button class="btn ghost icon" data-tts-stop="" hidden="" id="btn-speak-stop" title="Stop text-to-speech playback immediately" type="button">STOP VOICE</button>
+<button class="btn primary" id="btn-send" title="Send message to the AI (uses the active local model and selected Matrix agent)" type="button"><span class="btn-label">Send</span></button>
+</div>
+<div aria-label="Chat status" class="studio-live-line" id="studio-live-line">
+<span aria-hidden="true" class="studio-status-dot" id="studio-status-dot"></span>
+<strong id="studio-status-agent">NO AGENT</strong>
+<span class="studio-status-sep">·</span>
+<span id="studio-status-model">NO MODEL</span>
+<span class="studio-turn-file" hidden="" id="studio-turn-file"></span>
+<span class="studio-status-spacer"></span>
+<span id="studio-generation-phase">IDLE</span>
+<span id="studio-generation-tokens"></span>
+<span id="studio-generation-rate"></span>
+<span id="studio-generation-think"></span>
+<span class="studio-vram-chip" hidden="" id="studio-vram-chip"></span>
+<span class="studio-compose-meta-count" id="studio-compose-messages">0 msgs</span>
+<span class="studio-stream-badge" id="studio-stream-health">IDLE</span>
+<span class="studio-status-state" id="studio-status-state">READY</span>
+<label class="studio-snapshot-toggle studio-compose-handoff"><input id="studio-chat-snapshot-handoff-toggle" type="checkbox"/> <span>Handoff</span></label>
+</div>
+</div>
+<div class="status-line" id="chat-status" title="Chat pipeline status"></div>
+</div>
+
+<div aria-labelledby="studio-view-rag" class="tab-panel rag-workspace" id="panel-rag" role="tabpanel">
+  <div class="rag-workspace-head panel-toolbar">
+    <div>
+      <div class="studio-card-kicker">PERSISTENT LOCAL KNOWLEDGE</div>
+      <h2>RAG CONTROL CENTER</h2>
+      <p class="muted small">Documents and explicitly saved chat facts are indexed locally under <code>MatrixFiles/RAG</code>. Retrieval is CPU-only and survives Studio restarts.</p>
+    </div>
+    <div class="rag-head-actions">
+      <label class="check"><input checked="" id="set-rag-enabled" type="checkbox"/> Enable RAG for chat</label>
+      <button class="btn primary sm" id="btn-rag-add" type="button">ADD FILES</button>
+      <button class="btn ghost sm" id="btn-rag-reindex" type="button">REINDEX ALL</button>
+      <button class="btn ghost sm" id="btn-rag-export" type="button">EXPORT KNOWLEDGE</button>
+      <button class="btn ghost sm" id="btn-rag-import" type="button">IMPORT KNOWLEDGE</button>
+      <button class="btn ghost sm" id="btn-rag-open-folder" type="button">OPEN FOLDER</button>
+      <button class="btn ghost sm danger" id="btn-rag-clear" type="button">CLEAR ALL</button>
+    </div>
+  </div>
+  <div class="rag-workspace-scroll panel-scroll">
+    <div class="rag-status-grid studio-runtime-grid">
+      <div><span>ENGINE</span><strong id="rag-status-engine">BM25 · CPU</strong></div>
+      <div><span>SOURCES</span><strong id="rag-status-sources">0</strong></div>
+      <div><span>ACTIVE</span><strong id="rag-status-active">0</strong></div>
+      <div><span>PINNED</span><strong id="rag-status-pinned">0</strong></div>
+      <div><span>CHUNKS</span><strong id="rag-status-chunks">0</strong></div>
+      <div><span>GROUPS</span><strong id="rag-status-groups">0</strong></div>
+      <div><span>CHAT FACTS</span><strong id="rag-status-chat">0</strong></div>
+      <div><span>GPU</span><strong id="rag-status-gpu">NONE</strong></div>
+    </div>
+
+    <div class="rag-workspace-grid">
+      <section class="settings-card">
+        <h4 class="settings-card-title">Retrieval controls</h4>
+        <div class="settings-grid">
+          <label class="field">Retrieved chunks
+            <select id="set-rag-top-k">
+              <option value="2">2 · minimal</option><option value="4">4 · balanced</option><option value="6">6 · broad</option><option value="8">8 · maximum</option>
+            </select>
+          </label>
+          <label class="field">Prompt budget
+            <select id="set-rag-context-chars">
+              <option value="3000">3,000 chars · lean</option><option value="6000">6,000 chars · balanced</option><option value="10000">10,000 chars · broad</option><option value="16000">16,000 chars · large context</option><option value="24000">24,000 chars · maximum</option>
+            </select>
+          </label>
+          <label class="field">Chunk size
+            <select id="set-rag-chunk-chars">
+              <option value="1200">1,200 chars</option><option value="1800">1,800 chars · balanced</option><option value="2400">2,400 chars</option><option value="3200">3,200 chars</option>
+            </select>
+          </label>
+          <label class="field">Chunk overlap
+            <select id="set-rag-chunk-overlap">
+              <option value="120">120 chars</option><option value="240">240 chars · balanced</option><option value="360">360 chars</option><option value="480">480 chars</option>
+            </select>
+          </label>
+          <label class="field">Minimum relevance
+            <select id="set-rag-min-score">
+              <option value="0">Off · accept any match</option><option value="0.15">0.15 · permissive</option><option value="0.25">0.25 · balanced</option><option value="0.5">0.50 · selective</option><option value="0.9">0.90 · strict</option>
+            </select>
+          </label>
+        </div>
+        <p class="field-hint muted small">The prompt budget is runtime-capped against the selected context size. Minimum relevance blocks weak matches before prompt injection. Chunk-size changes apply to existing sources after REINDEX.</p>
+      </section>
+
+      <section class="settings-card rag-manual-card">
+        <h4 class="settings-card-title">Add persistent knowledge</h4>
+        <p class="muted small">Paste a durable fact here, use <strong>KNOW+</strong> on any chat message, or type <code>Remember: your fact</code> in Chat. Ordinary conversation is never auto-indexed.</p>
+        <label class="field">Label <span class="muted">(optional)</span>
+          <input autocomplete="off" id="rag-manual-label" maxlength="72" placeholder="Project Nightglass" type="text"/>
+        </label>
+        <label class="field">Knowledge
+          <textarea id="rag-manual-text" placeholder="Project Nightglass uses protocol ZX-417." rows="4"></textarea>
+        </label>
+        <div class="rag-card-actions">
+          <button class="btn primary sm" id="btn-rag-save-manual" type="button">SAVE KNOWLEDGE</button>
+          <span class="muted small" id="rag-manual-status">Ready.</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="settings-card rag-sources-card">
+      <div class="rag-section-head">
+        <div>
+          <h4 class="settings-card-title">Knowledge sources</h4>
+          <p class="muted small">Files, manually entered notes, and chat facts share one searchable persistent index.</p>
+        </div>
+        <div class="rag-source-filter-row">
+          <label class="field rag-source-filter">Show
+            <select id="rag-source-filter">
+              <option value="all">All sources</option><option value="file">Files only</option><option value="chat">Chat facts</option><option value="manual">Manual notes</option><option value="enabled">Enabled only</option><option value="disabled">Disabled only</option><option value="pinned">Pinned only</option>
+            </select>
+          </label>
+          <label class="field rag-source-filter">Group
+            <select id="rag-group-filter"><option value="all">All groups</option></select>
+          </label>
+          <label class="field rag-source-search">Find
+            <input autocomplete="off" id="rag-source-search" placeholder="name, tag, group" type="search"/>
+          </label>
+        </div>
+      </div>
+      <input accept=".txt,.md,.markdown,.rst,.json,.jsonl,.csv,.tsv,.py,.js,.mjs,.cjs,.ts,.tsx,.jsx,.html,.htm,.css,.scss,.ps1,.psm1,.psd1,.bat,.cmd,.sh,.sql,.xml,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.properties,.c,.h,.cpp,.hpp,.java,.cs,.go,.rs,.php,.rb,.swift,.kt,.tex,.pdf,.docx,.xlsx,text/*" id="rag-file-input" type="file" multiple hidden/>
+      <input accept="application/json,.json" id="rag-bundle-input" type="file" hidden/>
+      <p aria-live="polite" class="field-hint muted small" id="rag-transfer-status">Ready · no knowledge files are sent online.</p>
+      <div class="base-model-list rag-document-list" id="rag-document-list"></div>
+    </section>
+
+    <section class="settings-card">
+      <h4 class="settings-card-title">Test retrieval</h4>
+      <div class="rag-search-row">
+        <label class="field">Query
+          <input autocomplete="off" id="rag-test-query" placeholder="What protocol does Project Nightglass use?" type="text"/>
+        </label>
+        <button class="btn ghost sm" id="btn-rag-test" type="button">SEARCH INDEX</button>
+      </div>
+      <pre class="rag-test-results field-hint muted small" id="rag-test-results">Search previews show final/base scores, query coverage, matched terms, pin boost, and source names without calling the LLM.</pre>
+    </section>
+
+    <div class="settings-section-footer">
+      <button class="btn ghost sm btn-reset-section" data-section="rag" type="button">Reset RAG settings</button>
+    </div>
+  </div>
+</div>
+</aside>
+</main>
+</div>
+<!-- RAG v2 source manager -->
+<dialog aria-labelledby="rag-source-modal-title" class="modal rag-source-modal" id="modal-rag-source">
+<form method="dialog">
+  <div class="studio-modal-head">
+    <div><span class="studio-card-kicker">RAG SOURCE</span><h3 id="rag-source-modal-title">Manage knowledge source</h3></div>
+    <button class="btn ghost sm" value="cancel" type="submit">CLOSE</button>
+  </div>
+  <div class="rag-source-modal-body">
+    <div class="rag-source-modal-meta" id="rag-source-modal-meta">Loading source…</div>
+    <div class="settings-grid rag-source-edit-grid">
+      <label class="field">Source name<input id="rag-source-name" maxlength="180" type="text"/></label>
+      <label class="field">Display label<input id="rag-source-label" maxlength="120" placeholder="Optional friendly name" type="text"/></label>
+      <label class="field">Group<input id="rag-source-group" maxlength="64" placeholder="Project / domain" type="text"/></label>
+      <label class="field">Tags<input id="rag-source-tags" maxlength="400" placeholder="security, matrix, docs" type="text"/></label>
+    </div>
+    <div class="rag-source-flags">
+      <label class="check"><input id="rag-source-enabled" type="checkbox"/> Enabled for retrieval</label>
+      <label class="check"><input id="rag-source-pinned" type="checkbox"/> Pinned priority</label>
+    </div>
+    <label class="field">Local text preview<textarea id="rag-source-text-preview" readonly rows="14"></textarea></label>
+    <div class="rag-source-modal-actions">
+      <button class="btn primary sm" id="btn-rag-source-save" type="button">SAVE SOURCE</button>
+      <button class="btn ghost sm" id="btn-rag-source-reindex" type="button">REINDEX SOURCE</button>
+      <button class="btn ghost sm danger" id="btn-rag-source-remove" type="button">REMOVE SOURCE</button>
+      <span class="muted small" id="rag-source-modal-status">Ready.</span>
+    </div>
+  </div>
+</form>
+</dialog>
+<!-- Isolated saved-chat manager -->
+<dialog aria-labelledby="resume-chat-title" class="modal resume-chat-modal" id="modal-resume-chat">
+<form method="dialog">
+<div class="studio-modal-head">
+<div>
+<h3 id="resume-chat-title">ISOLATED CHAT SESSIONS</h3>
+<p class="muted small">Each entry is a separate local chat session. Opening one restores only that session's saved transcript.</p>
+</div>
+<button class="btn ghost sm" id="resume-chat-close" title="Close saved chat manager" type="button">CLOSE</button>
+</div>
+<div class="resume-chat-toolbar">
+<input aria-label="Search saved chats" autocomplete="off" id="resume-chat-search" placeholder="Search saved chats…" type="search"/>
+<select class="resume-chat-filter" id="resume-chat-filter" title="Filter saved chats"><option value="all">ALL</option><option value="favorites">FAVORITES</option><option value="archived">ARCHIVED</option><option value="active">ACTIVE</option></select>
+<select class="resume-chat-sort" id="resume-chat-sort" title="Sort saved chats"><option value="newest">NEWEST</option><option value="oldest">OLDEST</option><option value="name">NAME</option></select>
+<button class="btn ghost sm" id="resume-chat-select-all" type="button">SELECT ALL</button>
+<button class="btn ghost sm" id="resume-chat-clear-selection" type="button">CLEAR</button>
+<button class="btn danger sm" disabled="" id="resume-chat-delete-selected" type="button">DELETE SELECTED</button>
+<button class="btn ghost sm" id="resume-chat-open-folder" title="Open the local folder containing saved chat session files" type="button">OPEN CHAT FOLDER</button>
+<button class="btn ghost sm" id="resume-chat-refresh" title="Refresh saved chat sessions" type="button">REFRESH</button>
+<button class="btn primary sm" id="resume-chat-new" title="Start a new isolated chat" type="button">NEW CHAT</button>
+</div>
+<div class="resume-chat-selection-bar"><span id="resume-chat-selected-count">0 SELECTED</span><span class="muted">· only selected saved chats are affected</span></div>
+<div aria-live="polite" class="resume-chat-list" id="resume-chat-list"></div>
+</form>
+</dialog>
+<!-- Custom Matrix agent creator -->
+
+<!-- First-run wizard -->
+<div aria-labelledby="wizard-title" aria-modal="true" class="wizard-overlay hidden" id="wizard" role="dialog">
+<div class="wizard-card">
+<h2 id="wizard-title">Cypra Matrix Studio Start Guide</h2>
+<p class="muted">A quick route from local runtime startup to your first local agent conversation.</p>
+<div class="wiz-status-grid"><div><span>RUNTIME</span><strong id="wiz-runtime-state">CHECKING…</strong></div><div><span>MODELS</span><strong id="wiz-model-state">CHECKING…</strong></div><div><span>AGENTS</span><strong id="wiz-agent-state">CHECKING…</strong></div></div>
+<div class="wiz-guide-grid">
+<section><strong>1 · HARDWARE</strong><span>Confirm LOCAL RUNTIME ONLINE. Review GPU, VRAM, quantization, Plan B batch, and the model-supported context limit.</span></section>
+<section><strong>2 · MODELS</strong><span>Install or select a project-local Ollama model. Models remain stored under MatrixFiles.</span></section>
+<section><strong>3 · AGENT</strong><span>Choose an agent and use Save Agent to lock its local directive for the current workflow.</span></section>
+<section><strong>4 · CHAT</strong><span>Enter a prompt and send it. Each saved conversation remains an isolated local transcript.</span></section>
+<section><strong>5 · REVIEW / FILES</strong><span>Review a file for one turn or enable the selected agent’s private workplace when file operations are needed.</span></section>
+<section><strong>6 · RECOVERY</strong><span>Runtime &amp; Models provides status, warm, unload, model management, and Kill Localhost controls.</span></section>
+</div>
+<div class="modal-actions">
+<button class="btn ghost" id="wiz-skip" type="button">CLOSE</button>
+<button class="btn primary" id="wiz-go" type="button">OPEN STUDIO</button>
+</div>
+</div>
+</div>
+<!-- Settings modal -->
+<dialog class="modal modal-wide modal-settings" id="modal-settings">
+<form class="settings-form" id="form-settings" method="dialog">
+<div class="settings-chrome">
+<div class="modal-drag-handle" id="settings-drag-handle" title="Drag to move">
+<div class="settings-title-block">
+<h3>Settings</h3>
+<p class="settings-subtitle muted small">Local agent studio · models, chat, appearance, and runtime</p>
+</div>
+<span class="modal-drag-hint">drag</span>
+</div>
+<div class="settings-toolbar">
+<label class="settings-search-wrap" title="Filter settings by name">
+<span class="sr-only">Search settings</span>
+<input autocomplete="off" class="settings-search" id="settings-search" placeholder="Search settings…  ( / )" type="search"/>
+</label>
+<p class="settings-search-empty muted small hidden" id="settings-search-empty">No matching settings. Clear search or try another word.</p>
+</div>
+</div>
+<div class="settings-layout">
+<nav aria-label="Settings sections" class="settings-nav" role="tablist">
+<button class="stab" data-stab="studio" title="Agent, runtime, and Studio panels" type="button">
+<span class="stab-name">Runtime &amp; Models</span>
+<span class="stab-desc">Hardware · Ollama · library</span>
+</button>
+<button class="stab active" data-stab="ai" title="Chat generation, provider, Matrix, and speech" type="button">
+<span class="stab-name">AI, Chat &amp; Voice</span>
+<span class="stab-desc">Models · responses · speech</span>
+</button>
+
+<button class="stab" data-stab="visuals" title="Themes, colors, shapes, effects" type="button">
+<span class="stab-name">Appearance</span>
+<span class="stab-desc">Themes · colors · chat</span>
+</button>
+<button class="stab" data-stab="ui" title="Density, chrome, safety, window" type="button">
+<span class="stab-name">App &amp; Data</span>
+<span class="stab-desc">UI · export · local paths</span>
+</button>
+<button class="stab" data-stab="plugins" title="Install plugins from GitHub" type="button">
+<span class="stab-name">Plugins</span>
+<span class="stab-desc">Extend CypraStudio</span>
+</button>
+</nav>
+<div class="settings-body">
+<div class="stab-panel" id="stab-studio">
+<section class="settings-card">
+<h4 class="settings-card-title">Runtime status</h4>
+<p class="muted small">Project-local Ollama health, hardware, context, VRAM, and recovery controls.</p>
+<div class="studio-runtime-grid runtime-live-grid studio-hardware-grid">
+<div><span>BASE MODEL</span><strong id="studio-live-model">NO MODEL</strong></div>
+<div><span>LOADED MODEL</span><strong id="studio-live-loaded-model">NO MODEL LOADED</strong></div>
+<div><span>QUANTIZATION</span><strong id="runtime-control-quant">DETECTING</strong></div>
+<div><span>PLAN B / BATCH</span><strong id="runtime-control-plan-b">AUTO</strong></div>
+<div><span>CONTEXT</span><strong id="studio-live-context">8192</strong></div>
+<div><span>KV CACHE</span><strong id="runtime-control-kv">Q8_0</strong></div>
+<div><span>OLLAMA</span><strong id="studio-live-endpoint">—</strong></div>
+<div><span>MODEL STORE</span><strong id="studio-live-store">—</strong></div>
+<div><span>GPU</span><strong id="studio-live-gpu">—</strong></div>
+<div><span>VRAM</span><strong id="studio-live-vram">—</strong></div>
+<div><span>UTILIZATION</span><strong id="studio-live-util">—</strong></div>
+<div><span>TEMPERATURE</span><strong id="studio-live-temp">—</strong></div>
+<div><span>FLASH ATTENTION</span><strong id="runtime-control-flash">ON</strong></div>
+<div><span>CONCURRENCY</span><strong id="runtime-control-concurrency">1 MODEL · 1 REQUEST</strong></div>
+</div>
+<div class="studio-setting-note studio-setting-note-compact"><strong>CONTEXT SIZE</strong><span>Configured under AI, Chat &amp; Voice → Ollama efficiency. The live value above is the value requested from Ollama.</span></div>
+<div class="studio-local-control-actions">
+<button type="button" class="btn primary sm" id="runtime-refresh">CHECK STATUS</button>
+<button type="button" class="btn ghost sm" id="runtime-warm">WARM MODEL</button>
+<button type="button" class="btn ghost sm" id="runtime-unload">UNLOAD VRAM</button>
+<button type="button" class="btn danger sm" id="btn-kill-localhost" title="Open kill-localhost.ps1 and choose localhost listeners to stop">KILL LOCALHOST</button>
+</div>
+<div class="studio-local-control-note" id="runtime-control-note">Runtime controls affect only the project-local Ollama instance.</div>
+</section>
+<section class="settings-card">
+<h4 class="settings-card-title">Model library</h4>
+<p class="muted small" id="base-model-hw">Detecting GPU…</p>
+<div id="base-model-warning" class="base-model-warning" hidden></div>
+<div class="local-preset-row" id="base-kit-row" role="group" aria-label="Recommended base kits"></div>
+<div id="base-model-list" class="base-model-list"></div>
+<div class="settings-grid">
+<button type="button" class="btn primary sm" id="btn-install-daily">Install Daily 6GB kit</button>
+<button type="button" class="btn ghost sm" id="btn-install-quality">Install Reasoning 6GB</button>
+<button type="button" class="btn ghost sm" id="btn-update-models">Update installed</button>
+<button type="button" class="btn ghost sm" id="btn-refresh-recommend">Refresh recommendations</button>
+</div>
+<label class="field">Add any base model / Ollama tag
+<input type="text" id="pull-model-name" placeholder="qwen3:8b, llama3.2:3b, or any valid Ollama tag" autocomplete="off" />
+</label>
+<button type="button" class="btn primary sm studio-wide-btn" id="btn-pull-named">Add / install base model</button>
+<div class="studio-pull-status-box" id="studio-pull-status-box" aria-live="polite">
+<div class="studio-pull-status-head"><strong id="studio-pull-current">IDLE · READY</strong><span id="studio-pull-percent">0%</span></div>
+<div class="studio-pull-progress-track" id="studio-pull-track"><div class="studio-pull-progress-fill" id="studio-pull-fill"></div></div>
+<div class="studio-pull-meta"><span id="studio-pull-stage">WAITING</span><span id="studio-pull-bytes">—</span></div>
+<p class="muted small" id="pull-progress"></p>
+<button type="button" class="btn danger sm" id="btn-pull-cancel" hidden>CANCEL PULL</button>
+</div>
+<div class="studio-card model-library-card">
+<div class="studio-card-title">LOCAL MODEL LIBRARY</div>
+<div class="studio-library-head"><span id="studio-model-library-count">0 models</span><button type="button" class="btn ghost sm" id="studio-model-library-refresh">REFRESH</button></div>
+<div class="studio-model-library-path" id="studio-model-library-path">OllamaModels</div>
+<div class="studio-model-library-list" id="studio-model-library-list"></div>
+</div>
+</section>
+<section class="settings-card">
+<h4 class="settings-card-title">Current chat</h4>
+<div class="studio-runtime-grid">
+<div><span>HISTORY SCOPE</span><strong id="studio-live-history-scope">CURRENT CHAT ONLY</strong></div>
+<div><span>HISTORY TURNS</span><strong id="studio-live-history-turns">24</strong></div>
+<div><span>ACTIVE AGENT</span><strong id="studio-live-agent">NO AGENT</strong></div>
+<div><span>HANDOFF</span><strong id="studio-live-handoff">OFF</strong></div>
+<div><span>MESSAGES</span><strong id="studio-live-message-count">0</strong></div>
+</div>
+<div class="studio-settings-inline-actions"><button type="button" class="btn primary sm" id="btn-export-session">EXPORT CHAT</button></div>
+</section>
+</div>
+<div class="stab-panel active" id="stab-ai">
+<div class="settings-card settings-card-lead studio-settings-summary">
+<h4 class="settings-card-title">Studio controls</h4>
+<p class="muted small">Only active local-chat controls are shown. Retired visualizer and development-workspace settings have been removed.</p>
+<div class="settings-grid">
+<div class="studio-setting-note"><strong>MODEL CONTROL</strong><span>Install, pull, refresh, select, update, and remove models under <b>Runtime &amp; Models</b>.</span></div>
+<label class="field">Think mode
+      <select id="studio-settings-think"><option value="auto">Auto — classify each turn</option><option value="off">Off — direct</option><option value="standard">Standard</option><option value="deep">Deep</option></select>
+      <span class="field-hint muted small">Persistent. This setting and the Chat Think selector stay synchronized and survive restart.</span>
+</label>
+<label class="field">Reasoning budget target
+      <input id="set-think-budget" max="8192" min="128" step="128" type="number" value="768"/>
+      <span class="field-hint muted small">Soft target for Standard reasoning. Deep uses up to 2×. Native model APIs do not expose a universal hard reasoning-token cap.</span>
+</label>
+</div>
+</div>
+<div class="settings-card" id="chat-bg-card">
+<h4 class="settings-card-title">Chat log background</h4>
+<p class="muted small">Picture sits behind the conversation only. Use the slider for a smooth background blur. Drop an image onto the chat log, use <b>BG</b> in the chat toolbar, or choose a file here.</p>
+<label class="field">Image
+            <input accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" id="chat-bg-file" type="file"/>
+</label>
+<label>Image blur
+            <input id="chat-bg-strength" max="40" min="0" step="1" type="range" value="18"/>
+<span class="range-val" id="chat-bg-strength-val">18%</span>
+</label>
+<button class="btn ghost sm" id="chat-bg-clear" type="button">Clear background</button>
+</div>
+<div class="settings-card settings-card-lead">
+<h4 class="settings-card-title">Daily driver</h4>
+<p class="muted small">For this PC: <strong>Ollama + Qwen ~3B</strong> is the primary local runtime. Cloud local provider remains optional.</p>
+</div>
+<div class="settings-card">
+<h4 class="settings-card-title">Provider</h4>
+<label class="field">LLM provider
+          <select id="set-provider">
+<option value="xai">local provider Local API (cloud)</option>
+<option value="ollama">Local Ollama (this machine)</option>
+</select>
+</label>
+<p class="field-hint muted small" id="provider-hint">Uses Local API when online; switch to Ollama for free local chat.</p>
+
+</div><!-- /card provider -->
+<div class="settings-card legacy-settings-hidden" id="provider-xai-block">
+<h4 class="settings-card-title">local provider cloud</h4>
+<label class="field">local provider API key <span class="muted">(or LOCAL_API_KEY / local login)</span>
+<input autocomplete="off" id="set-key" placeholder="xai-…" type="password"/>
+</label>
+<div class="settings-grid">
+<label class="field">Chat model (local provider)
+            <select id="set-chat-model">
+<option value="local-4.5">local-4.5</option>
+<option value="local-4.3">local-4.3</option>
+<option value="local-4.20-0309-reasoning">local-4.20 reasoning</option>
+<option value="local-4.20-0309-non-reasoning">local-4.20 non-reasoning</option>
+</select>
+</label>
+</div>
+</div>
+<div class="settings-card hidden" id="provider-ollama-block">
+<h4 class="settings-card-title">Local Ollama</h4>
+<label class="field">Ollama base URL
+            <input autocomplete="off" id="set-ollama-url" placeholder="http://127.0.0.1:11434" type="text"/>
+</label>
+<div class="studio-setting-note studio-setting-note-compact"><strong>MODEL MANAGEMENT</strong><span>Runtime is the single model-control surface. Use its Local Model Library for install/pull, select, refresh, update, and remove.</span></div>
+<h4 class="settings-section">Ollama efficiency</h4>
+<p class="muted small">Warm model cache, bounded history, and runtime tuning for faster local turns.</p>
+<div class="settings-grid">
+<label class="field">Context Size
+              <select id="set-ollama-ctx" aria-describedby="ollama-context-help">
+<option value="8192">8K · 8,192</option>
+<option value="16384">16K · 16,384</option>
+<option value="32768">32K · 32,768</option>
+<option value="65536">64K · 65,536</option>
+<option value="131072">128K · 131,072</option>
+<option value="262144">256K · 262,144</option>
+</select>
+</label>
+<div class="studio-setting-note studio-setting-note-compact" id="ollama-context-help"><strong>CONTEXT RANGE</strong><span>8,192–262,144 tokens. Changing this saves immediately and applies the selected value to normal chat and Matrix agents; larger contexts require model support and substantially more memory.</span></div>
+<label>Keep model warm
+              <select id="set-ollama-keep">
+<option value="5m">5 minutes</option>
+<option value="10m">10 minutes</option>
+<option selected="" value="30m">30 minutes (recommended)</option>
+<option value="1h">1 hour</option>
+<option value="-1">Always (until restart)</option>
+<option value="0">Unload immediately</option>
+</select>
+</label>
+<input id="set-ollama-chat-tok" type="hidden" value="-1"/>
+<label>Plan B prompt batch
+              <select id="set-ollama-batch">
+<option value="">Auto (recommended)</option>
+<option value="512">512 · cooler / lower VRAM</option>
+<option value="768">768 · balanced</option>
+<option value="1024">1024 · fastest / higher VRAM</option>
+</select>
+</label>
+<span class="range-val" hidden="" id="val-ollama-chat-tok"></span>
+<input id="set-response-length-preset" type="hidden" value="-1"/>
+<label>History turns
+              <input id="set-ollama-hist" max="16" min="2" step="1" title="Fewer turns = less prompt VRAM" type="range" value="6"/>
+<span class="range-val" id="val-ollama-hist"></span>
+</label>
+</div>
+<label class="check"><input checked="" id="set-show-generation-stats" type="checkbox"/> Show generation stats when available</label>
+<p class="field-hint muted small">When a reply ends at the generation limit, the Studio will report the stop reason and token count instead of silently looking truncated.</p>
+<p class="field-hint muted small">6GB GPUs: start at 8K context. 16K–256K can require substantially more KV-cache memory and may exceed the selected model or GPU capacity.</p>
+</div>
+<div class="settings-card">
+<h4 class="settings-card-title">Conversation</h4>
+<label class="check"><input id="set-conv-flow" type="checkbox"/> Optimize conversational flow</label>
+<label class="field">Style
+          <select id="set-conv-style">
+<option value="natural">Natural — friendly thinking partner</option>
+<option value="concise">Concise — short &amp; high-signal</option>
+<option value="socratic">Socratic — answer + one deep question</option>
+<option value="technical">Technical — precise &amp; structured</option>
+</select>
+</label>
+<p class="field-hint muted small">Continuity from recent turns, open threads, and follow-up chips. Works with Ollama and local provider.</p>
+<label class="check"><input id="set-error-reduction" type="checkbox"/> Detect &amp; fix reply inconsistencies</label>
+<p class="field-hint muted small">Reduces contradictory formatting and flags reply inconsistencies when detected.</p>
+</div>
+<div class="settings-card" id="matrix-settings-card">
+<h4 class="settings-card-title">CypraMatrix (local folder)</h4>
+<p class="muted small">Uses Modelfiles and SYSTEM directives from <code>MatrixFiles/</code> inside this Cypra Studio project — not <code>Documents\CypraTeam</code>.</p>
+<label class="check"><input checked="" id="set-matrix-enabled" type="checkbox"/> Use Matrix agent SYSTEM directive (Modelfile only)</label>
+<label class="check"><input id="set-matrix-handoff" type="checkbox"/> Agent handoff context (optional)</label>
+<p class="field-hint muted small">When enabled, the selected agent receives a compact handoff of prior agents’ statements from this chat only.</p>
+<div class="settings-grid" style="margin-top:6px">
+<button class="btn primary sm" id="btn-save-agent-settings" title="Save the selected agent and disable auto-route" type="button">Save agent</button>
+</div>
+<label class="check"><input id="set-plain-chat" type="checkbox"/> Plain chat — keep the agent, skip STATUS / EXECUTION BLOCK templates</label>
+<label class="check"><input checked="" id="set-show-think" type="checkbox"/> Show the base model’s native think stream when one is generated</label>
+<p class="muted small" id="matrix-root-hint">Looking for local MatrixFiles…</p>
+<div aria-label="Core Matrix agents" class="matrix-core-row" id="matrix-core-row" role="group"></div>
+<label class="field">Search agents
+            <input autocomplete="off" id="set-matrix-search" placeholder="cypra, medic, hydrologist…" type="search"/>
+</label>
+<label class="field">Active agent
+            <select id="set-matrix-agent"></select>
+</label>
+<pre class="matrix-preview" hidden="" id="matrix-directive-preview"></pre>
+<div class="settings-grid" style="margin-top:8px">
+<button class="btn primary sm" id="btn-install-matrix" title="Run the bundled Matrix installer and model setup" type="button">Install Matrix</button>
+</div>
+<p class="muted small" id="matrix-install-status">Install or repair the bundled Matrix runtime. Agents run only inside the current Studio chat.</p>
+</div>
+<div class="settings-card">
+<h4 class="settings-card-title">Voice Playback</h4>
+<label class="check"><input id="set-voice-output" type="checkbox"/> Voice Output</label>
+<label>Provider
+          <select id="set-tts-provider">
+<option value="local">Piper Local — private CPU</option>
+<option value="edge">Edge Online — Microsoft speech service</option>
+<option value="off">Off</option>
+</select>
+</label>
+<label id="tts-local-voice-field">Local voice
+          <select id="set-tts-local-voice">
+<option value="en_US-lessac-medium">Lessac — English US</option>
+</select>
+</label>
+<div hidden="" id="tts-edge-controls">
+<label class="check"><input id="set-tts-allow-online" type="checkbox"/> Allow Online TTS</label>
+<label>Online failure fallback
+            <select id="set-tts-online-fallback">
+<option value="piper">Piper Local</option>
+<option value="none">None</option>
+</select>
+</label>
+<label>Edge voice
+            <select id="set-tts-edge-voice">
+<option value="en-US-AvaNeural">Ava — English US</option>
+</select>
+</label>
+<button class="btn ghost sm" id="btn-edge-voices" type="button">LOAD EDGE VOICES</button>
+<p class="field-hint muted small" id="edge-tts-notice">ONLINE TTS · Spoken text is sent to Microsoft's speech service.</p>
+</div>
+<div class="settings-grid">
+<label>Speech rate
+            <input id="set-tts-rate" max="1.8" min="0.5" step="0.05" type="range" value="1"/>
+<span class="range-val" id="val-tts-rate"></span>
+</label>
+<label>CPU threads
+            <select id="set-tts-cpu-threads">
+<option value="1">1</option>
+<option value="2">2 — recommended</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+</label>
+</div>
+<div class="settings-grid">
+<label class="check"><input id="set-speak" type="checkbox"/> Speak Agent Responses</label>
+<label class="check"><input id="set-tts-speak-director" type="checkbox"/> Speak Director Responses</label>
+<label class="check"><input id="set-tts-speak-system" type="checkbox"/> Speak System Messages</label>
+<label class="check"><input id="set-tts-skip-code" type="checkbox"/> Skip Code Blocks</label>
+<label class="check"><input id="set-tts-skip-urls" type="checkbox"/> Skip URLs</label>
+<label class="check"><input id="set-tts-stop-previous" type="checkbox"/> Stop Previous Speech On New Response</label>
+</div>
+<label>Maximum spoken characters
+          <input id="set-tts-max-chars" max="10000" min="100" step="100" type="number" value="1000"/>
+</label>
+<div class="settings-grid">
+<button class="btn ghost sm" id="btn-tts-test-legacy" type="button">TEST VOICE</button>
+<button class="btn ghost sm" data-tts-stop="" id="btn-tts-stop" type="button">STOP VOICE</button>
+</div>
+<p class="field-hint muted small" id="local-tts-status">Piper loads lazily on CPU only. One worker, bounded queue, no GPU allocation.</p>
+</div>
+
+<div class="settings-card">
+<h4 class="settings-card-title">Chat generation</h4>
+<label class="field" title="Lower = more grounded; ~0.6–0.7 is good for local Qwen">Chat temperature
+          <input id="set-chat-temp" max="1.5" min="0" step="0.05" type="range" value="0.65"/>
+<span class="range-val" id="val-chat-temp"></span>
+</label>
+
+</div>
+<div class="settings-section-footer">
+<button class="btn ghost sm btn-reset-section" data-section="ai" type="button">Reset AI section</button>
+</div>
+</div>
+<div class="stab-panel" id="stab-visuals"><div class="settings-card settings-card-lead"><h4 class="settings-card-title">Appearance</h4><p class="muted small">Interface style, themes, and application colors for Chat, RAG, Review, Settings, and window chrome.</p></div><div class="settings-card ui-mode-card">
+<div>
+<h4 class="settings-card-title">Interface Style</h4>
+<p class="muted small">Change the visual language without changing your selected color theme. Classic preserves the current Matrix Studio look; Modern uses softer surfaces, cleaner typography, and quieter chrome.</p>
+</div>
+<label class="settings-control-field">UI mode
+<select aria-label="Interface style" id="set-ui-mode">
+<option value="classic">Classic</option>
+<option value="modern">Modern</option>
+</select>
+</label>
+<div class="ui-mode-preview" aria-hidden="true">
+<div class="ui-mode-preview-card ui-mode-preview-classic"><span>CLASSIC</span><i></i><i></i></div>
+<div class="ui-mode-preview-card ui-mode-preview-modern"><span>Modern</span><i></i><i></i></div>
+</div>
+<p class="muted small" id="ui-mode-desc">Classic · terminal-forward Matrix Studio styling.</p>
+</div><div class="settings-card app-theme-card">
+<div>
+<h4 class="settings-card-title">Themes</h4>
+<p class="muted small">Choose the application theme used by Chat, Review, Settings, and controls.</p>
+</div>
+<label class="settings-control-field">Theme
+            <select aria-label="Application theme" id="set-theme"></select>
+</label>
+<div aria-label="Application theme gallery" class="theme-gallery" id="theme-gallery"></div>
+<p class="muted small" id="theme-desc"></p>
+</div><div class="settings-card ui-color-card">
+<div class="ui-color-card-head">
+<div>
+<h4 class="settings-card-title">Color Control</h4>
+<p class="muted small">Independent UI palette for the application chrome, chat, messages, and thinking surfaces.</p>
+</div>
+<label class="settings-control-check"><input id="set-ui-colors-enabled" type="checkbox"/> <span>Use Custom UI Colors</span></label>
+</div>
+<div class="ui-color-actions">
+<button class="btn ghost sm" id="ui-colors-load-theme" type="button">Load Current Theme</button>
+<button class="btn ghost sm" id="ui-colors-use-theme" type="button">Use Theme Colors</button>
+</div>
+<details class="settings-control-group" open="">
+<summary>UI OVERALL</summary>
+<div class="settings-control-grid ui-color-grid">
+<label class="settings-control-field settings-control-color"><span>App Background <output data-ui-color-value="background"></output></span><input aria-label="App background color" data-ui-color="background" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Panels / Chrome <output data-ui-color-value="panel"></output></span><input aria-label="Panel color" data-ui-color="panel" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Cards / Elevated Surface <output data-ui-color-value="surface"></output></span><input aria-label="Surface color" data-ui-color="surface" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Borders / Dividers <output data-ui-color-value="border"></output></span><input aria-label="Border color" data-ui-color="border" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Primary Text <output data-ui-color-value="text"></output></span><input aria-label="Primary text color" data-ui-color="text" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Muted Text <output data-ui-color-value="muted"></output></span><input aria-label="Muted text color" data-ui-color="muted" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Primary Accent <output data-ui-color-value="accent"></output></span><input aria-label="Primary accent color" data-ui-color="accent" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Secondary Accent <output data-ui-color-value="accent2"></output></span><input aria-label="Secondary accent color" data-ui-color="accent2" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Success <output data-ui-color-value="success"></output></span><input aria-label="Success color" data-ui-color="success" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Warning <output data-ui-color-value="warning"></output></span><input aria-label="Warning color" data-ui-color="warning" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Danger <output data-ui-color-value="danger"></output></span><input aria-label="Danger color" data-ui-color="danger" type="color"/></label>
+</div>
+</details>
+<details class="settings-control-group">
+<summary>CHAT / THINKING</summary>
+<div class="settings-control-grid ui-color-grid">
+<label class="settings-control-field settings-control-color"><span>Chat Background <output data-ui-color-value="chatBackground"></output></span><input aria-label="Chat background color" data-ui-color="chatBackground" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>User Message <output data-ui-color-value="userMessage"></output></span><input aria-label="User message color" data-ui-color="userMessage" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Assistant Message <output data-ui-color-value="assistantMessage"></output></span><input aria-label="Assistant message color" data-ui-color="assistantMessage" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Thinking Background <output data-ui-color-value="thinkingBackground"></output></span><input aria-label="Thinking background color" data-ui-color="thinkingBackground" type="color"/></label>
+<label class="settings-control-field settings-control-color"><span>Thinking Text <output data-ui-color-value="thinkingText"></output></span><input aria-label="Thinking text color" data-ui-color="thinkingText" type="color"/></label>
+</div>
+</details>
+</div></div>
+<div class="stab-panel" id="stab-ui">
+<div class="settings-card">
+<h4 class="settings-card-title">Workspace Comfort</h4>
+<p class="muted small">These controls refine readability, motion, scale, and chat workspace comfort. Existing controls are reused here rather than duplicated elsewhere.</p>
+<label class="check"><input id="set-reduce-motion" type="checkbox"/> Reduce motion</label>
+<div class="settings-grid">
+<label class="field">UI density
+          <select id="set-density">
+<option value="comfortable">Comfortable</option>
+<option value="compact">Compact</option>
+</select>
+</label>
+<label class="field">Overall UI scale
+          <input id="set-font-scale" max="1.4" min="0.85" step="0.05" type="range" value="1"/>
+<span class="range-val" id="val-font-scale"></span>
+</label>
+<label class="field">Chat text size
+          <input id="set-chat-font-scale" max="1.6" min="0.8" step="0.05" type="range" value="1"/>
+<span class="range-val" id="val-chat-font-scale"></span>
+</label>
+</div>
+</div>
+<div class="settings-card">
+<h4 class="settings-card-title">Safety</h4>
+<div class="settings-checks">
+<label class="check"><input checked="" id="set-confirm-destructive" type="checkbox"/> Confirm before destructive actions</label>
+</div>
+</div>
+<div class="settings-card">
+<h4 class="settings-card-title">Desktop window</h4>
+<div class="settings-grid">
+<label class="field">Window width (desktop)
+          <input id="set-win-w" max="3840" min="960" step="10" type="number"/>
+</label>
+<label class="field">Window height (desktop)
+          <input id="set-win-h" max="2160" min="640" step="10" type="number"/>
+</label>
+</div>
+</div>
+<div class="settings-card" id="config-transfer-card">
+<h4 class="settings-card-title">Configuration backup</h4>
+<p class="muted small">Export active Studio settings and custom Matrix agents to portable JSON, or restore them from a previous export. API keys, tokens, secrets, chat sessions, models, memory data, and RAG knowledge files are never included.</p>
+<div class="settings-grid">
+<button class="btn primary sm" id="btn-export-config" type="button">EXPORT CONFIG</button>
+<button class="btn ghost sm" id="btn-import-config" type="button">IMPORT CONFIG</button>
+</div>
+<input accept="application/json,.json" id="config-import-file" type="file" hidden/>
+<p class="field-hint muted small" id="config-transfer-status" aria-live="polite">Ready · exports are also saved under MatrixFiles/Exports.</p>
+</div>
+<div class="settings-section-footer">
+<button class="btn ghost sm btn-reset-section" data-section="ui" type="button">Reset UI section</button>
+</div>
+</div>
+<div class="stab-panel" id="stab-plugins">
+<div class="settings-card settings-card-lead">
+<h4 class="settings-card-title">Plugins</h4>
+<p class="muted small">
+          Install from <strong>GitHub</strong> or a local folder. Only install code you trust.
+        </p>
+</div>
+<div class="settings-card">
+<h4 class="settings-section">Install from GitHub</h4>
+<label title="owner/repo, owner/repo@branch, or full GitHub URL">
+          Repository
+          <input id="plugin-github-source" placeholder="owner/repo or https://github.com/owner/repo" type="text"/>
+</label>
+<label title="Optional branch or tag (default: main)">
+          Branch / tag <span class="muted">(optional)</span>
+<input id="plugin-github-ref" placeholder="main" type="text"/>
+</label>
+<div class="settings-grid" style="margin-top:6px">
+<button class="btn primary sm" id="btn-plugin-github" title="Download zip from GitHub and install" type="button">Install from GitHub</button>
+<button class="btn ghost sm" id="btn-plugin-example" title="Install the bundled Hello Status example" type="button">Install example</button>
+<button class="btn ghost sm" id="btn-plugin-refresh" title="Reload plugin list" type="button">Refresh</button>
+</div>
+<p class="muted small" id="plugin-install-status"></p>
+<h4 class="settings-section">Install local folder / zip</h4>
+<label title="Path relative to CypraStudio project root, or absolute">
+          Path
+          <input id="plugin-local-path" placeholder="plugins/hello-status" type="text"/>
+</label>
+<button class="btn ghost sm" id="btn-plugin-local" title="Install from local folder or .zip" type="button">Install local</button>
+<h5 class="settings-section">Installed</h5>
+<div class="plugin-list muted small" id="plugin-list">Loading…</div>
+<p class="field-hint muted small">Stored under <code>data/plugins/</code>. Remove deletes files; Disable keeps them.</p>
+</div>
+</div>
+</div><!-- /.settings-body -->
+</div><!-- /.settings-layout -->
+<div class="modal-actions settings-footer">
+<button class="btn ghost sm btn-reset-section" data-section="all" title="Reset the streamlined Studio settings to defaults" type="button">Reset settings</button>
+<button class="btn ghost" id="settings-cancel" type="button">Close</button>
+<button class="btn primary" id="settings-save" type="button">Save changes</button>
+</div>
+</form>
+</dialog>
+<dialog aria-labelledby="file-review-title" class="modal modal-wide file-review-modal" id="modal-file-review">
+<form id="form-file-review" onsubmit="return false;">
+<div class="studio-modal-head">
+<div>
+<div class="studio-card-kicker">LOCAL FILE REVIEW</div>
+<h3 id="file-review-title">Review File</h3>
+<p class="muted small">Choose one local file, then either review it with the active model or add the original file directly to persistent RAG knowledge. Review remains isolated from chat unless you insert or queue it. RAG indexing does not run the model.</p>
+</div>
+<button class="btn ghost sm" id="file-review-cancel" type="button">Close</button>
+</div>
+<div class="file-review-body">
+<input accept=".txt,.md,.markdown,.rst,.csv,.tsv,.json,.jsonl,.yaml,.yml,.xml,.html,.htm,.css,.scss,.js,.mjs,.cjs,.jsx,.ts,.tsx,.py,.ps1,.psm1,.psd1,.bat,.cmd,.ini,.cfg,.conf,.toml,.log,.properties,.sql,.sh,.c,.h,.cpp,.hpp,.java,.cs,.go,.rs,.php,.rb,.swift,.kt,.tex,.pdf,.docx,.xlsx" class="file-review-input-fallback" id="file-review-input" type="file"/>
+<div class="file-review-summary">
+<strong id="file-review-name">No file selected</strong>
+<span id="file-review-type">—</span>
+</div>
+<label class="field">Review instruction
+          <textarea id="file-review-prompt" placeholder="What should the model look for in this file?" rows="3">Review this file for important content, structure, issues, and actionable findings.</textarea>
+</label>
+<div class="studio-settings-inline-actions file-review-actions">
+<button class="btn primary sm" id="file-review-run" type="button">REVIEW FILE</button>
+<button class="btn ghost sm" hidden="" id="file-review-stop" title="Stop this review. Keeps whatever text has already streamed." type="button">■ STOP</button>
+<button class="btn ghost sm" id="file-review-choose" type="button">CHOOSE FILE</button>
+<button class="btn ghost sm" id="file-review-add-rag" title="Index the original selected file in persistent local RAG. No model review is run." type="button">ADD TO RAG</button>
+<button class="btn ghost sm" id="file-review-insert" title="Paste into the composer. Not sent until you press Send." type="button">INSERT</button>
+<button class="btn ghost sm" id="file-review-next-send" title="Attach this file excerpt to the next chat send only. It is not saved in session history." type="button">NEXT SEND</button>
+</div>
+<section class="think-tty file-review-think" hidden="" id="file-review-think">
+<header class="think-tty-bar">
+<span class="think-tty-dot"></span>
+<span>REVIEW THINK</span>
+<button class="think-tty-clear" id="file-review-think-hide" title="Hide think stream" type="button">hide</button>
+</header>
+<pre class="think-tty-body" id="file-review-think-body"></pre>
+</section>
+<div class="file-review-output-head">
+<div>
+<div class="status-line" id="file-review-status">Ready.</div>
+<div class="muted small" id="file-review-rag-status">RAG: not indexed from this dialog.</div>
+</div>
+<button class="btn ghost sm" id="file-review-copy" title="Copy the review text" type="button">COPY</button>
+</div>
+<pre aria-live="polite" class="file-review-output" id="file-review-output"></pre>
+</div>
+</form>
+</dialog>
+<div aria-atomic="true" aria-live="polite" class="studio-toast-stack" id="studio-toast-stack"></div>
+<script src="/static/js/themes.js?v=500-clean-baseline"></script>
+<script src="/static/js/voice.js?v=500-clean-baseline"></script>
+
+<script src="/static/js/app.js?v=persistent-think-v1-20260904"></script>
+
+</body>
+</html>
