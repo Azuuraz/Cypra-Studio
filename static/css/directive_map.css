@@ -1,0 +1,56 @@
+.directive-map-workspace{position:relative;min-height:0;overflow:hidden;background:#020205;color:var(--text);}
+.directive-map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 18px;border-bottom:1px solid rgba(var(--accent-rgb),.22);background:linear-gradient(180deg,rgba(10,6,18,.96),rgba(2,2,5,.90));z-index:4;}
+.directive-map-toolbar h2{margin:1px 0 3px;font-size:18px;letter-spacing:.11em;text-shadow:0 0 18px rgba(var(--accent-rgb),.55)}
+.directive-map-kicker{font-size:9px;letter-spacing:.24em;color:var(--muted);font-weight:800}
+.directive-map-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.directive-map-agent-field{display:grid;gap:4px;font-size:9px;letter-spacing:.14em;color:var(--muted)}
+.directive-map-agent-field select{min-width:210px;max-width:320px;height:31px;background:#06040b;color:var(--text);border:1px solid rgba(var(--accent-rgb),.35);border-radius:6px;padding:0 9px;outline:none}
+.directive-map-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(var(--accent-rgb),.085),transparent 34%),radial-gradient(circle at 50% 52%,rgba(62,0,255,.08),transparent 56%),#020205;isolation:isolate}
+.directive-map-grid{position:absolute;inset:0;opacity:.24;background-image:linear-gradient(rgba(130,80,255,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(130,80,255,.11) 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(circle at center,#000 18%,transparent 78%)}
+.directive-map-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dm-link{fill:none;stroke:rgba(112,57,255,.18);stroke-width:1.4;stroke-linecap:round;stroke-dasharray:3 8;transition:stroke .35s,filter .35s,opacity .35s;opacity:.38}
+.dm-link.built{stroke:rgba(255,0,136,.68);opacity:.9;filter:url(#dm-soft-glow)}
+.dm-node{opacity:.08;transform-box:fill-box;transform-origin:center;transform:scale(.82);transition:opacity .34s ease,transform .34s cubic-bezier(.2,.9,.2,1)}
+.dm-node.built{opacity:1;transform:scale(1)}
+.dm-node-ring{fill:rgba(4,2,12,.9);stroke:rgba(115,0,255,.78);stroke-width:1.5;filter:url(#dm-soft-glow)}
+.dm-node.core .dm-node-ring{stroke:rgba(255,0,136,.95);stroke-width:2.2}
+.dm-node-dot{fill:#ff0088;filter:url(#dm-glow)}
+.dm-node-title{fill:#f7eaff;font-size:13px;font-weight:800;letter-spacing:.07em;text-anchor:middle;paint-order:stroke;stroke:#030207;stroke-width:3px;stroke-linejoin:round}
+.dm-node-sub{fill:#988da9;font-size:9px;letter-spacing:.05em;text-anchor:middle}
+.directive-map-builder{pointer-events:none;opacity:0;transition:opacity .2s}
+.directive-map-builder.active{opacity:1}
+.dm-builder-aura{fill:rgba(115,0,255,.12);stroke:rgba(115,0,255,.48);stroke-width:1;animation:dm-pulse 1.2s ease-in-out infinite}
+.dm-builder-head,.dm-builder-core{fill:#ff0088}.dm-builder-body{fill:none;stroke:#ff3da6;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+@keyframes dm-pulse{50%{r:27;opacity:.35}}
+.directive-map-hud{position:absolute;left:16px;bottom:14px;display:flex;gap:18px;padding:9px 12px;border:1px solid rgba(var(--accent-rgb),.23);border-radius:7px;background:rgba(2,1,7,.74);backdrop-filter:blur(8px);box-shadow:0 0 28px rgba(var(--accent-rgb),.07)}
+.directive-map-hud>div{display:grid;gap:2px;min-width:92px}.directive-map-hud span{font-size:8px;letter-spacing:.18em;color:var(--muted)}.directive-map-hud strong{font-size:11px;letter-spacing:.08em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.directive-map-empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:8px;z-index:3}.directive-map-empty[hidden]{display:none}.directive-map-empty strong{letter-spacing:.2em;color:#ff0088;text-shadow:0 0 18px rgba(255,0,136,.6)}.directive-map-empty span{color:var(--muted);font-size:12px}
+body.studio-primary-view-directive-map .layout{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+body.studio-primary-view-directive-map .side-pane{width:100%;height:100%;border:0}
+@media(max-width:760px){.directive-map-toolbar{align-items:flex-start;flex-direction:column}.directive-map-controls{justify-content:flex-start}.directive-map-agent-field select{min-width:180px}.directive-map-hud{right:12px;left:12px;gap:10px}.directive-map-hud>div{min-width:0;flex:1}}
+/* Override the legacy chat-only geometry while this workspace owns the primary stage. */
+body.studio-primary-view-directive-map #side-pane{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:minmax(0,1fr) !important;
+  grid-template-areas:"primary" !important;
+  overflow:hidden !important;
+}
+body.studio-primary-view-directive-map #side-pane > .tab-panel:not(#panel-directive-map){
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+body.studio-primary-view-directive-map #side-pane > #panel-directive-map{
+  display:flex !important;
+  grid-area:primary !important;
+  position:relative !important;
+  inset:auto !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  overflow:hidden !important;
+  visibility:visible !important;
+}

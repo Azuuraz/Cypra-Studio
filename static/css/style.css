@@ -1,16 +1,16 @@
 :root{
-  /* Retro red/black terminal */
+  /* Cypra default palette */
   --bg0: #050505;
-  --bg1: #0a0506;
-  --bg2: #12080a;
-  --bg3: #1a0c0e;
+  --bg1: #000000;
+  --bg2: #000000;
+  --bg3: #000000;
   --line: rgba(var(--accent-rgb), 0.28);
-  --line-strong: rgba(255, 80, 110, 0.48);
-  --text: #ffe8ec;
-  --muted: #c48a94;
-  --accent: #ff2a4a;
-  --accent-rgb: 255, 42, 74;
-  --accent2: #ff6b81;
+  --line-strong: #43005c;
+  --text: #ff0088;
+  --muted: #2b00ff;
+  --accent: #7300ff;
+  --accent-rgb: 115, 0, 255;
+  --accent2: #ff0026;
   --accent-wash: color-mix(in srgb, var(--accent) 7%, transparent);
   --accent-wash-strong: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 28%, transparent);
@@ -29,18 +29,18 @@
   --ui-motion-fast: 140ms;
   --ui-motion: 220ms;
   --ui-motion-slow: 420ms;
-  --pink: #ff8fa3;
+  --pink: #ff0026;
   --warn: #fbbf24;
-  --danger: #ff4d6d;
-  --success: #39d98a;
-  --ui-panel: #0a0506;
-  --ui-surface: #12080a;
+  --danger: #ff002f;
+  --success: #00ff04;
+  --ui-panel: #000000;
+  --ui-surface: #000000;
   --bg: var(--bg0);
   --panel: var(--bg1);
   --border: var(--line);
   --text-muted: var(--muted);
   --text-dim: var(--muted);
-  --glass: rgba(8, 0, 2, 0.88);
+  --glass: #000000;
   --radius: 10px;
   --radius-sm: 6px;
   --font: "Cascadia Mono", "Consolas", "Courier New", ui-monospace, monospace;
@@ -4800,3 +4800,18 @@ body.ui-mode-modern .studio-presence-line{opacity:.55;}
 .think-quick-control select{min-width:104px;height:28px;padding:2px 24px 2px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font:inherit;font-size:.76rem;font-weight:700}
 body.ui-mode-modern .think-quick-control select{border-radius:10px;background:color-mix(in srgb,var(--surface) 88%,transparent)}
 #studio-generation-think{font-weight:700;opacity:.9}
+
+/* Chat generation STOP alignment fix.
+   Keep the hidden attribute authoritative; only make the control flex when visible. */
+#panel-chat .studio-chat-composer #btn-stop-chat:not([hidden]){
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+  padding:0 8px !important;
+  line-height:1 !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  letter-spacing:.05em !important;
+  text-transform:uppercase !important;
+}

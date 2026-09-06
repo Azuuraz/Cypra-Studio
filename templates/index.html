@@ -6,7 +6,9 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>CypraMatrixStudio</title>
 <link href="/static/favicon.svg" rel="icon" type="image/svg+xml"/>
-<link href="/static/css/style.css?v=persistent-think-v1-20260904" rel="stylesheet"/>
+<link href="/static/css/style.css?v=stop-center-v2-20260906" rel="stylesheet"/>
+<link href="/static/css/studio_extras.css?v=watch-sandbox-v3-native-tips-20260906" rel="stylesheet"/>
+<link href="/static/css/directive_map.css?v=directive-map-v1-20260906" rel="stylesheet"/>
 </head>
 <body class="theme-ember ui-mode-classic studio-primary-view-chat chat-only-mode">
 <div aria-live="polite" class="boot-splash" id="boot-splash">
@@ -34,7 +36,7 @@
 <div class="top-stats">
 <span class="plugin-status-host" id="plugin-status-host" title="Active plugins"></span>
 <span class="pill pill-warn" id="auth-pill" title="Local project Ollama status">CHECKING…</span>
-<span class="stat-chip" id="build-pill" title="Studio build">v1.0.0 · CHAT + REVIEW</span>
+<span class="stat-chip" id="build-pill" title="Studio build">v1.0.1 · WATCH + SANDBOX</span>
 </div>
 <div class="top-actions">
 
@@ -42,6 +44,9 @@
 
 <div aria-label="Primary Studio view" class="studio-primary-view-tabs" role="tablist">
 <button aria-controls="panel-chat" aria-selected="true" class="studio-primary-view-tab active" id="studio-view-chat" role="tab" title="Show the full-height Matrix Chat workspace" type="button">CHAT</button>
+<button aria-controls="panel-watchtower" aria-selected="false" class="studio-primary-view-tab" id="studio-view-watchtower" role="tab" title="Watch live runtime, hardware, queue, and health signals without changing system state" type="button">WATCHTOWER</button>
+<button aria-controls="panel-sandbox" aria-selected="false" class="studio-primary-view-tab" id="studio-view-sandbox" role="tab" title="Run disposable agent/model experiments that are not saved to normal chat history" type="button">SANDBOX</button>
+<button aria-controls="panel-directive-map" aria-selected="false" class="studio-primary-view-tab" id="studio-view-directive-map" role="tab" title="Watch a single neon builder trace and construct the selected Matrix directive as a live map" type="button">DIRECTIVE MAP</button>
 <button aria-controls="panel-rag" aria-selected="false" class="studio-primary-view-tab" id="studio-view-rag" role="tab" title="Manage persistent local RAG knowledge" type="button">RAG</button>
 <button aria-controls="modal-settings" aria-selected="false" class="studio-primary-view-tab" id="btn-studio-settings" role="tab" title="Open the full-height Studio Settings workspace" type="button">SETTINGS</button>
 
@@ -145,6 +150,166 @@
 </div>
 </div>
 <div class="status-line" id="chat-status" title="Chat pipeline status"></div>
+</div>
+
+
+<div aria-labelledby="studio-view-watchtower" class="tab-panel extras-workspace watchtower-workspace" id="panel-watchtower" role="tabpanel">
+  <div class="extras-head panel-toolbar">
+    <div>
+      <div class="studio-card-kicker">READ-ONLY SYSTEM OBSERVABILITY</div>
+      <h2>WATCHTOWER</h2>
+      <p class="muted small">Live health, runtime, hardware, queue, and knowledge signals. Watchtower does not change models, settings, files, or tasks.</p>
+    </div>
+    <div class="extras-head-actions">
+      <label class="extras-switch" title="Refresh Watchtower only while this tab is visible. Polling stops when you leave the tab."><input checked id="watch-auto" type="checkbox"/> AUTO REFRESH</label>
+      <button class="btn ghost sm" id="watch-refresh" title="Take one fresh read-only system sample now" type="button">REFRESH</button>
+      <button class="btn primary sm" id="watch-diagnostics" title="Run the existing Studio diagnostics checks: Ollama, model store, configured model, agent roster, sessions, and settings file" type="button">RUN DIAGNOSTICS</button>
+      <button class="btn ghost sm" id="watch-copy" title="Copy the latest Watchtower JSON snapshot to the clipboard" type="button">COPY SNAPSHOT</button>
+    </div>
+  </div>
+  <div class="extras-scroll">
+    <section class="watch-summary-grid" aria-label="Watchtower live summary">
+      <article class="watch-card" data-watch-level="neutral"><div class="watch-label">RUNTIME <span class="tip" tabindex="0" title="Project-local Ollama reachability and current runtime health. Watchtower never starts or stops Ollama." aria-label="Project-local Ollama reachability and current runtime health. Watchtower never starts or stops Ollama.">?</span></div><strong id="watch-runtime">CHECKING</strong><span id="watch-runtime-detail">Waiting for first sample…</span></article>
+      <article class="watch-card"><div class="watch-label">VRAM <span class="tip" tabindex="0" title="GPU memory reported by the existing Cypra runtime hardware probe. Tight means usage is near the configured GPU capacity." aria-label="GPU memory reported by the existing Cypra runtime hardware probe. Tight means usage is near the configured GPU capacity.">?</span></div><strong id="watch-vram">—</strong><div class="watch-meter"><i id="watch-vram-bar"></i></div><span id="watch-gpu">GPU</span></article>
+      <article class="watch-card"><div class="watch-label">CPU <span class="tip" tabindex="0" title="Whole-system CPU utilization sampled with the operating system API. The first sample may show WARMING until a delta exists." aria-label="Whole-system CPU utilization sampled with the operating system API. The first sample may show WARMING until a delta exists.">?</span></div><strong id="watch-cpu">WARMING</strong><div class="watch-meter"><i id="watch-cpu-bar"></i></div><span id="watch-cpu-detail">system load</span></article>
+      <article class="watch-card"><div class="watch-label">RAM <span class="tip" tabindex="0" title="Whole-system physical memory usage. This is not only the Cypra process." aria-label="Whole-system physical memory usage. This is not only the Cypra process.">?</span></div><strong id="watch-ram">—</strong><div class="watch-meter"><i id="watch-ram-bar"></i></div><span id="watch-ram-detail">physical memory</span></article>
+      <article class="watch-card"><div class="watch-label">ACTIVE MODEL <span class="tip" tabindex="0" title="Resident model is currently loaded by Ollama. Idle means the configured chat model is selected but not resident in VRAM." aria-label="Resident model is currently loaded by Ollama. Idle means the configured chat model is selected but not resident in VRAM.">?</span></div><strong id="watch-model">—</strong><span id="watch-model-detail">No sample</span></article>
+      <article class="watch-card"><div class="watch-label">TASK QUEUE <span class="tip" tabindex="0" title="Counts are derived from Cypra's authoritative operational task state. Watchtower does not create or alter tasks." aria-label="Counts are derived from Cypra's authoritative operational task state. Watchtower does not create or alter tasks.">?</span></div><strong id="watch-queue">0 RUN · 0 WAIT</strong><span id="watch-queue-detail">0 total</span></article>
+    </section>
+
+    <section class="watch-two-col">
+      <article class="extras-card">
+        <div class="extras-card-head"><div><span class="studio-card-kicker">HEALTH CHECKS</span><h3>DIAGNOSTICS</h3></div><span class="extras-badge" id="watch-diag-badge">NOT RUN</span></div>
+        <p class="muted small">Explicit diagnostic checks run only when this tab opens or when you press Run Diagnostics. <span class="tip" tabindex="0" title="Diagnostics performs read-only reachability and storage checks. It may take a few seconds if Ollama is offline because the reachability probe has a timeout." aria-label="Diagnostics performs read-only reachability and storage checks. It may take a few seconds if Ollama is offline because the reachability probe has a timeout.">?</span></p>
+        <div class="watch-checks" id="watch-checks"><div class="watch-empty">Run diagnostics to populate checks.</div></div>
+      </article>
+      <article class="extras-card">
+        <div class="extras-card-head"><div><span class="studio-card-kicker">LIVE COUNTERS</span><h3>OPERATIONS + KNOWLEDGE</h3></div><span class="extras-badge" id="watch-sample-age">—</span></div>
+        <div class="watch-detail-grid">
+          <div><span>RUNNING</span><strong id="watch-running">0</strong></div>
+          <div><span>QUEUED</span><strong id="watch-queued">0</strong></div>
+          <div><span>FAILED / BLOCKED</span><strong id="watch-failed">0</strong></div>
+          <div><span>COMPLETED</span><strong id="watch-completed">0</strong></div>
+          <div><span>RAG SOURCES</span><strong id="watch-rag-sources">0</strong></div>
+          <div><span>RAG CHUNKS</span><strong id="watch-rag-chunks">0</strong></div>
+          <div><span>MEMORY NOTES</span><strong id="watch-memory-notes">0</strong></div>
+          <div><span>API SAMPLE <span class="tip" tabindex="0" title="Round-trip time measured in the UI plus the server's own status-snapshot construction time." aria-label="Round-trip time measured in the UI plus the server's own status-snapshot construction time.">?</span></span><strong id="watch-latency">—</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="extras-card watch-event-card">
+      <div class="extras-card-head"><div><span class="studio-card-kicker">TRANSIENT WATCH LOG</span><h3>STATE CHANGES</h3></div><button class="btn ghost sm" id="watch-clear-events" title="Clear only this on-screen transient Watchtower event list" type="button">CLEAR LOG</button></div>
+      <p class="muted small">Only meaningful state changes are added here. This log exists in the current UI session and is not written to disk.</p>
+      <div class="watch-events" id="watch-events"><div class="watch-empty">No state changes observed yet.</div></div>
+    </section>
+  </div>
+  <div class="extras-status-line"><span class="watch-live-dot" id="watch-live-dot"></span><span id="watch-status">Watchtower idle.</span></div>
+</div>
+
+<div aria-labelledby="studio-view-sandbox" class="tab-panel extras-workspace sandbox-workspace" id="panel-sandbox" role="tabpanel">
+  <div class="extras-head panel-toolbar">
+    <div>
+      <div class="studio-card-kicker">DISPOSABLE AI EXPERIMENT</div>
+      <h2>SANDBOX</h2>
+      <p class="muted small">Experiment with agents, installed models, temperature, and optional RAG retrieval without creating a normal chat session.</p>
+    </div>
+    <div class="sandbox-safety-note" title="Sandbox runs are kept only in this page's memory. Reloading Cypra clears them. Nothing enters RAG until you explicitly promote an assistant result.">
+      <strong>TRANSIENT</strong><span>NO CHAT SESSION · NO AUTO-SAVE</span>
+    </div>
+  </div>
+  <div class="sandbox-layout">
+    <aside class="sandbox-controls">
+      <div class="extras-card">
+        <div class="extras-card-head"><div><span class="studio-card-kicker">EXPERIMENT PROFILE</span><h3>RUN CONFIG</h3></div></div>
+        <label class="field">Agent <span class="tip" tabindex="0" title="Uses this Matrix agent only for the Sandbox run. It does not change the agent selected in normal Chat." aria-label="Uses this Matrix agent only for the Sandbox run. It does not change the agent selected in normal Chat.">?</span>
+          <select id="sandbox-agent"><option value="">Loading agents…</option></select>
+        </label>
+        <label class="field">Installed model <span class="tip" tabindex="0" title="Sandbox can temporarily target an installed model without changing the normal Chat model setting. It will never pull an uninstalled model automatically." aria-label="Sandbox can temporarily target an installed model without changing the normal Chat model setting. It will never pull an uninstalled model automatically.">?</span>
+          <select id="sandbox-model"><option value="">Loading models…</option></select>
+        </label>
+        <label class="field">Temperature <span class="tip" tabindex="0" title="Lower values are more deterministic; higher values increase variation. This override applies only to the current Sandbox experiment." aria-label="Lower values are more deterministic; higher values increase variation. This override applies only to the current Sandbox experiment.">?</span>
+          <div class="sandbox-range-row"><input id="sandbox-temperature" max="1.5" min="0" step="0.05" type="range" value="0.7"/><output id="sandbox-temperature-value">0.70</output></div>
+        </label>
+        <label class="field">Think mode <span class="tip" tabindex="0" title="OFF is fastest. STANDARD and DEEP add the same bounded internal reasoning control used by normal Cypra chat, but only for this experiment." aria-label="OFF is fastest. STANDARD and DEEP add the same bounded internal reasoning control used by normal Cypra chat, but only for this experiment.">?</span>
+          <select id="sandbox-think"><option value="off">OFF</option><option value="standard">STANDARD</option><option value="deep">DEEP</option></select>
+        </label>
+        <label class="extras-switch sandbox-toggle" title="Allow this experiment to retrieve relevant excerpts from persistent RAG. Retrieval is read-only; the experiment is not written back to RAG."><input id="sandbox-rag" type="checkbox"/> READ RAG</label>
+        <div class="sandbox-control-actions">
+          <button class="btn ghost sm" id="sandbox-reset" title="Erase the current in-memory Sandbox transcript. This does not touch saved chats or RAG." type="button">RESET</button>
+          <button class="btn ghost sm" id="sandbox-export" title="Download this current Sandbox experiment as a local JSON file. It is not added to Chat or RAG." type="button">EXPORT JSON</button>
+        </div>
+      </div>
+      <div class="extras-card sandbox-last-meta">
+        <span class="studio-card-kicker">LAST RUN</span>
+        <div class="sandbox-meta-grid"><div><span>MODEL</span><strong id="sandbox-meta-model">—</strong></div><div><span>AGENT</span><strong id="sandbox-meta-agent">—</strong></div><div><span>TIME</span><strong id="sandbox-meta-time">—</strong></div><div><span>RAG HITS</span><strong id="sandbox-meta-rag">0</strong></div></div>
+      </div>
+    </aside>
+    <section class="sandbox-main">
+      <div aria-live="polite" class="sandbox-log" id="sandbox-log">
+        <div class="sandbox-empty" id="sandbox-empty"><strong>Disposable workspace ready.</strong><span>Runs stay here only until reset or reload. Use PROMOTE LAST only when a result is worth keeping in RAG.</span></div>
+      </div>
+      <div class="sandbox-compose">
+        <textarea id="sandbox-input" placeholder="Try a prompt, compare an agent, test a model…" rows="3" title="Enter sends. Shift+Enter adds a newline. This prompt is not added to your normal chat session."></textarea>
+        <div class="sandbox-compose-actions">
+          <span class="muted small" id="sandbox-status">Ready · transient only</span>
+          <button class="btn ghost sm" disabled id="sandbox-copy-last" title="Copy the last assistant result without saving it anywhere" type="button">COPY LAST</button>
+          <button class="btn ghost sm" disabled id="sandbox-promote" title="Explicitly save the last assistant result into persistent RAG. This is the only Sandbox action here that writes knowledge." type="button">PROMOTE LAST TO RAG</button>
+          <button class="btn primary" id="sandbox-run" title="Run this prompt with the selected temporary Sandbox configuration" type="button">RUN</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div aria-labelledby="studio-view-directive-map" class="tab-panel directive-map-workspace" id="panel-directive-map" role="tabpanel">
+  <header class="directive-map-toolbar panel-toolbar">
+    <div>
+      <div class="directive-map-kicker">LIVING DIRECTIVE</div>
+      <h2>DIRECTIVE MAP</h2>
+      <p class="muted small">One builder traces the selected Matrix directive and ignites the map node by node.</p>
+    </div>
+    <div class="directive-map-controls">
+      <label class="directive-map-agent-field">
+        <span>DIRECTIVE</span>
+        <select id="directive-map-agent" aria-label="Directive agent"></select>
+      </label>
+      <button class="btn ghost sm" id="directive-map-rebuild" type="button">REBUILD</button>
+      <button class="btn ghost sm" id="directive-map-pause" type="button">PAUSE</button>
+    </div>
+  </header>
+  <div class="directive-map-stage" id="directive-map-stage">
+    <div class="directive-map-grid" aria-hidden="true"></div>
+    <svg class="directive-map-svg" id="directive-map-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated directive graph" viewBox="0 0 1400 820">
+      <defs>
+        <filter id="dm-glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="dm-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g id="directive-map-links"></g>
+      <g id="directive-map-nodes"></g>
+      <g class="directive-map-builder" id="directive-map-builder" filter="url(#dm-glow)" aria-hidden="true">
+        <circle class="dm-builder-aura" cx="0" cy="0" r="20"/>
+        <circle class="dm-builder-head" cx="0" cy="-15" r="7"/>
+        <path class="dm-builder-body" d="M0,-7 L0,11 M-11,0 L0,2 L11,-1 M0,11 L-8,24 M0,11 L9,24"/>
+        <circle class="dm-builder-core" cx="0" cy="3" r="3.2"/>
+      </g>
+    </svg>
+    <div class="directive-map-empty" id="directive-map-empty" hidden>
+      <strong>NO DIRECTIVE</strong>
+      <span>Select a Matrix agent with a readable SYSTEM directive.</span>
+    </div>
+    <div class="directive-map-hud">
+      <div><span>BUILDER</span><strong id="directive-map-status">IDLE</strong></div>
+      <div><span>AGENT</span><strong id="directive-map-agent-name">—</strong></div>
+      <div><span>NODES</span><strong id="directive-map-count">0 / 0</strong></div>
+    </div>
+  </div>
 </div>
 
 <div aria-labelledby="studio-view-rag" class="tab-panel rag-workspace" id="panel-rag" role="tabpanel">
@@ -897,6 +1062,8 @@
 <script src="/static/js/voice.js?v=500-clean-baseline"></script>
 
 <script src="/static/js/app.js?v=persistent-think-v1-20260904"></script>
+<script src="/static/js/studio_extras.js?v=watch-sandbox-v2-20260906"></script>
+<script src="/static/js/directive_map.js?v=directive-map-v1-20260906"></script>
 
 </body>
 </html>

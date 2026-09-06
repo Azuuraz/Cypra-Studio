@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import traceback
 import uuid
 from datetime import datetime
@@ -580,6 +581,16 @@ class ChatRequest(BaseModel):
     files: bool = False
 
 
+class SandboxRunBody(BaseModel):
+    message: str = ""
+    history: list[dict[str, str]] = Field(default_factory=list)
+    agent: str = ""
+    model: str = ""
+    temperature: float | None = None
+    use_rag: bool = False
+    think_mode: str = "off"
+
+
 class IngestRequest(BaseModel):
     text: str
     title: str | None = None
@@ -791,6 +802,114 @@ def index() -> HTMLResponse:
             "Pragma": "no-cache",
         },
     )
+
+
+_WATCHTOWER_STARTED_AT = time.time()
+_WATCHTOWER_CPU_SAMPLE: tuple[int, int] | None = None
+
+
+def _watchtower_system_metrics() -> dict[str, Any]:
+    """Small dependency-free host snapshot. Windows uses WinAPI; Linux uses /proc."""
+    global _WATCHTOWER_CPU_SAMPLE
+    cpu_percent: float | None = None
+    ram_total_mb: int | None = None
+    ram_used_mb: int | None = None
+    ram_percent: float | None = None
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            class FILETIME(ctypes.Structure):
+                _fields_ = [("dwLowDateTime", wintypes.DWORD), ("dwHighDateTime", wintypes.DWORD)]
+
+            def ft_value(ft: FILETIME) -> int:
+                return (int(ft.dwHighDateTime) << 32) | int(ft.dwLowDateTime)
+
+            idle = FILETIME(); kernel = FILETIME(); user = FILETIME()
+            if ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
+                idle_v = ft_value(idle); total_v = ft_value(kernel) + ft_value(user)
+                prev = _WATCHTOWER_CPU_SAMPLE
+                _WATCHTOWER_CPU_SAMPLE = (idle_v, total_v)
+                if prev and total_v > prev[1]:
+                    total_delta = total_v - prev[1]
+                    idle_delta = max(0, idle_v - prev[0])
+                    cpu_percent = max(0.0, min(100.0, (1.0 - idle_delta / total_delta) * 100.0))
+
+            class MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", wintypes.DWORD), ("dwMemoryLoad", wintypes.DWORD),
+                    ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+            mem = MEMORYSTATUSEX(); mem.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(mem)):
+                ram_total_mb = int(mem.ullTotalPhys // (1024 * 1024))
+                ram_used_mb = int((mem.ullTotalPhys - mem.ullAvailPhys) // (1024 * 1024))
+                ram_percent = float(mem.dwMemoryLoad)
+        elif Path('/proc/stat').is_file():
+            parts = Path('/proc/stat').read_text(encoding='utf-8').splitlines()[0].split()[1:]
+            vals = [int(x) for x in parts]
+            idle_v = vals[3] + (vals[4] if len(vals) > 4 else 0)
+            total_v = sum(vals)
+            prev = _WATCHTOWER_CPU_SAMPLE
+            _WATCHTOWER_CPU_SAMPLE = (idle_v, total_v)
+            if prev and total_v > prev[1]:
+                total_delta = total_v - prev[1]; idle_delta = max(0, idle_v - prev[0])
+                cpu_percent = max(0.0, min(100.0, (1.0 - idle_delta / total_delta) * 100.0))
+            info = {}
+            for line in Path('/proc/meminfo').read_text(encoding='utf-8').splitlines():
+                if ':' in line:
+                    k, v = line.split(':', 1); info[k] = int(v.strip().split()[0])
+            total_kb = info.get('MemTotal', 0); avail_kb = info.get('MemAvailable', 0)
+            if total_kb:
+                ram_total_mb = int(total_kb / 1024); ram_used_mb = int((total_kb - avail_kb) / 1024)
+                ram_percent = round((ram_used_mb / max(1, ram_total_mb)) * 100.0, 1)
+    except Exception:
+        pass
+    return {
+        "cpu_percent": None if cpu_percent is None else round(cpu_percent, 1),
+        "ram_total_mb": ram_total_mb,
+        "ram_used_mb": ram_used_mb,
+        "ram_percent": None if ram_percent is None else round(ram_percent, 1),
+        "cpu_count": os.cpu_count() or 0,
+        "platform": sys.platform,
+    }
+
+
+@app.get("/api/watchtower/status")
+def api_watchtower_status() -> dict[str, Any]:
+    """Read-only live status for the Watchtower workspace."""
+    started = time.perf_counter()
+    runtime = honesty_snapshot(_settings)
+    op = operational_snapshot()
+    task_rows = list((op.get("tasks") or {}).values())
+    statuses: dict[str, int] = {}
+    for task in task_rows:
+        status = str((task or {}).get("status") or "unknown").strip().lower()
+        statuses[status] = statuses.get(status, 0) + 1
+    running = sum(v for k, v in statuses.items() if k in {"running", "active", "working", "executing"})
+    queued = sum(v for k, v in statuses.items() if k in {"queued", "pending", "planned", "waiting"})
+    failed = sum(v for k, v in statuses.items() if k in {"failed", "error", "blocked", "cancelled", "canceled"})
+    completed = sum(v for k, v in statuses.items() if k in {"completed", "complete", "success", "succeeded", "done"})
+    rag_stats = rag_store.stats()
+    mem_stats = memory.stats()
+    return {
+        "ok": bool(runtime.get("ok")),
+        "timestamp": time.time(),
+        "uptime_s": max(0, int(time.time() - _WATCHTOWER_STARTED_AT)),
+        "system": _watchtower_system_metrics(),
+        "runtime": runtime,
+        "operations": {
+            "total": len(task_rows), "running": running, "queued": queued,
+            "failed": failed, "completed": completed, "statuses": statuses,
+        },
+        "rag": rag_stats,
+        "memory": mem_stats,
+        "sample_ms": round((time.perf_counter() - started) * 1000.0, 1),
+    }
 
 
 @app.get("/api/health")
@@ -3278,6 +3397,112 @@ def _review_think_instruction(plan: dict[str, Any]) -> str:
         f"## THINK CONTROL — {label}\n"
         f"Reason internally before finalizing the review. Target roughly {budget} reasoning tokens or fewer, then provide the useful review without narrating chain-of-thought."
     )
+
+@app.post("/api/sandbox/run")
+def api_sandbox_run(body: SandboxRunBody) -> dict[str, Any]:
+    """Run one disposable experiment. No session, memory, RAG, or operations data is written."""
+    text = str(body.message or "").strip()
+    if not text:
+        raise HTTPException(400, "Sandbox prompt is empty")
+    if len(text) > 24000:
+        raise HTTPException(413, "Sandbox prompt is too large")
+
+    sandbox_settings = dict(_settings)
+    sandbox_settings["auto_extract"] = False
+    sandbox_settings["files_mode"] = False
+    sandbox_settings["talk_mode"] = False
+    sandbox_settings["plain_chat"] = True
+    if body.agent:
+        agent = get_agent(body.agent, sandbox_settings)
+        if not agent:
+            raise HTTPException(404, f"Matrix agent not found: {body.agent}")
+        sandbox_settings["matrix_enabled"] = True
+        sandbox_settings["matrix_agent"] = str(agent.get("slug") or body.agent)
+        sandbox_settings["matrix_agent_locked"] = True
+    if body.model:
+        requested_model = str(body.model).strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_./:-]{0,120}", requested_model):
+            raise HTTPException(400, "Invalid model name")
+        if provider_for(sandbox_settings, "chat") == "ollama":
+            available = {str(m.get("id") or m.get("name") or m.get("model") or "") for m in local_model_inventory(sandbox_settings).get("models", []) if isinstance(m, dict)}
+            if requested_model not in available:
+                # Accept :latest-equivalent tags without allowing arbitrary remote pulls.
+                base = requested_model.removesuffix(":latest")
+                if not any(x.removesuffix(":latest") == base for x in available):
+                    raise HTTPException(409, f"Sandbox model is not installed locally: {requested_model}")
+            sandbox_settings["ollama_chat_model"] = requested_model
+        else:
+            sandbox_settings["chat_model"] = requested_model
+
+    provider_state = provider_status(sandbox_settings)
+    if not provider_state.get("ok"):
+        raise HTTPException(503, provider_state.get("hint") or provider_state.get("error") or "LLM backend is not ready")
+
+    rag_context = ""
+    rag_hits: list[dict[str, Any]] = []
+    if bool(body.use_rag) and rag_store.stats().get("sources", 0):
+        try:
+            configured = max(1200, min(12000, int(sandbox_settings.get("rag_context_chars") or 6000)))
+            rag_context, rag_hits = rag_store.context_for_query(
+                text,
+                top_k=max(1, min(6, int(sandbox_settings.get("rag_top_k") or 4))),
+                max_chars=configured,
+                min_score=max(0.0, min(20.0, float(sandbox_settings.get("rag_min_score") or 0.25))),
+            )
+        except Exception:
+            rag_context, rag_hits = "", []
+
+    history: list[dict[str, str]] = []
+    for row in list(body.history or [])[-20:]:
+        if not isinstance(row, dict):
+            continue
+        role = str(row.get("role") or "").lower()
+        content = str(row.get("content") or "").strip()
+        if role in {"user", "assistant"} and content:
+            history.append({"role": role, "content": content[:8000]})
+
+    think_plan = _resolve_think_plan(text, sandbox_settings, override=body.think_mode or "off", rag_hits=rag_hits, has_file=False)
+    sandbox_settings["_think_runtime_mode"] = think_plan["resolved"]
+    sandbox_settings["_think_runtime_requested"] = think_plan["requested"]
+    sandbox_settings["_think_runtime_reason"] = think_plan["reason"]
+    sandbox_settings["_think_budget_tokens"] = think_plan["budget_tokens"]
+
+    temperature = float(body.temperature if body.temperature is not None else sandbox_settings.get("chat_temperature") or 0.7)
+    temperature = max(0.0, min(1.5, temperature))
+    model = resolve_chat_model(sandbox_settings)
+    messages = build_chat_messages(
+        history,
+        text,
+        rag_context=rag_context,
+        settings=sandbox_settings,
+    )
+    started = time.perf_counter()
+    try:
+        reply = chat_completion(
+            None,
+            messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=4096,
+            settings=sandbox_settings,
+            request_timeout=180,
+        )
+    except Exception as exc:
+        raise HTTPException(502, f"Sandbox run failed: {exc}") from exc
+    elapsed_ms = round((time.perf_counter() - started) * 1000.0, 1)
+    active_agent = resolve_chat_agent(sandbox_settings, text)
+    return {
+        "ok": True,
+        "reply": reply,
+        "model": model,
+        "agent": str((active_agent or {}).get("slug") or ""),
+        "temperature": temperature,
+        "think_mode": think_plan["resolved"],
+        "rag_hits": [{k: h.get(k) for k in ("source_id", "source_name", "score", "snippet")} for h in rag_hits],
+        "elapsed_ms": elapsed_ms,
+        "persistent": False,
+    }
+
 
 @app.post("/api/chat")
 def api_chat(body: ChatRequest) -> Any:

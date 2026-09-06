@@ -181,7 +181,7 @@
   }
 
   function syncPrimaryStudioTabs(view) {
-    const map = { chat: "studio-view-chat", rag: "studio-view-rag", settings: "btn-studio-settings" };
+    const map = { chat: "studio-view-chat", watchtower: "studio-view-watchtower", sandbox: "studio-view-sandbox", directiveMap: "studio-view-directive-map", rag: "studio-view-rag", settings: "btn-studio-settings" };
     Object.entries(map).forEach(([key, id]) => {
       const el = $("#" + id); if (!el) return;
       const active = key === view;
@@ -192,12 +192,18 @@
   }
 
   function setPrimaryStudioView(view) {
-    const safeView = ["chat", "rag", "settings"].includes(view) ? view : "chat";
+    const safeView = ["chat", "watchtower", "sandbox", "directiveMap", "rag", "settings"].includes(view) ? view : "chat";
     closeTopLevelWorkspaceDialogs();
     document.body.classList.toggle("studio-primary-view-chat", safeView === "chat");
+    document.body.classList.toggle("studio-primary-view-watchtower", safeView === "watchtower");
+    document.body.classList.toggle("studio-primary-view-sandbox", safeView === "sandbox");
+    document.body.classList.toggle("studio-primary-view-directive-map", safeView === "directiveMap");
     document.body.classList.toggle("studio-primary-view-rag", safeView === "rag");
     document.body.classList.toggle("studio-primary-view-settings", safeView === "settings");
     $("#panel-chat")?.classList.toggle("active", safeView === "chat");
+    $("#panel-watchtower")?.classList.toggle("active", safeView === "watchtower");
+    $("#panel-sandbox")?.classList.toggle("active", safeView === "sandbox");
+    $("#panel-directive-map")?.classList.toggle("active", safeView === "directiveMap");
     $("#panel-rag")?.classList.toggle("active", safeView === "rag");
     syncPrimaryStudioTabs(safeView);
     if (safeView === "settings") {
@@ -206,10 +212,11 @@
     } else if (safeView === "rag") {
       refreshRagStatus().catch((err) => setStatus(`RAG status failed · ${err.message || err}`));
     }
+    window.dispatchEvent(new CustomEvent("cypra:primary-view", { detail: { view: safeView } }));
   }
 
   function bindPrimaryStudioViewTabs() {
-    const ids = ["studio-view-chat", "studio-view-rag", "btn-studio-settings"];
+    const ids = ["studio-view-chat", "studio-view-watchtower", "studio-view-sandbox", "studio-view-directive-map", "studio-view-rag", "btn-studio-settings"];
     const nodes = ids.map((id) => $("#" + id)).filter(Boolean);
     if (!nodes.length) return;
     if (nodes.every((n) => n.dataset.primaryViewBound === "1")) return;
@@ -219,6 +226,9 @@
         e.preventDefault();
         const view = {
           "studio-view-chat": "chat",
+          "studio-view-watchtower": "watchtower",
+          "studio-view-sandbox": "sandbox",
+          "studio-view-directive-map": "directiveMap",
           "studio-view-rag": "rag",
           "btn-studio-settings": "settings",
         }[el.id];
